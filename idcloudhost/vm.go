@@ -1,9 +1,10 @@
-package main
+package idcloudhost
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -15,6 +16,11 @@ type VirtualMachineAPI struct {
 	Location    string
 	ApiEndpoint string
 	VM          *VM
+	VMList      []*VM
+}
+
+type vmList struct {
+	vm []VM
 }
 
 type VM struct {
@@ -136,6 +142,27 @@ func (vm *VirtualMachineAPI) Get(uuid string) error {
 		return err
 	}
 	return json.NewDecoder(r.Body).Decode(&vm.VM)
+}
+
+func (vm *VirtualMachineAPI) ListAll() error {
+	var c HTTPClient
+	c = &http.Client{}
+	url := fmt.Sprintf("%s/list", vm.ApiEndpoint)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("Got error %s", err.Error())
+	}
+	req.Header.Set("apiKey", vm.AuthToken)
+	r, err := c.Do(req)
+	if err != nil {
+		return fmt.Errorf("Got error %s", err.Error())
+	}
+	defer r.Body.Close()
+	if err = checkError(r.StatusCode); err != nil {
+		return err
+	}
+	bodyByte, err := ioutil.ReadAll(r.Body)
+	return json.Unmarshal(bodyByte, &vm.VMList)
 }
 
 func (vm *VirtualMachineAPI) Modify(uuid string, name string, ram int, vcpu int) error {

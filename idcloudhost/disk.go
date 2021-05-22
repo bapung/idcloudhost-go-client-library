@@ -1,4 +1,4 @@
-package main
+package idcloudhost
 
 type DiskStorage struct {
 	CreatedAt string   `json:"created_at"`
