@@ -4,14 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 )
 
-const idcloudhostUserApiUrl = "https://api.idcloudhost.com/v1/user-resource/user"
-
 type UserAPI struct {
-	AuthToken string
-	User      *User
+	AuthToken   string
+	ApiEndpoint string
+	User        *User
 }
 
 type User struct {
@@ -34,12 +32,15 @@ type UserProfileData struct {
 	Email     string `json:"email"`
 }
 
-func (u *UserAPI) setAuthToken(authToken string) {
+func (u *UserAPI) Init(authToken string) {
 	u.AuthToken = authToken
+	u.ApiEndpoint = "https://api.idcloudhost.com/v1/user-resource/user"
 }
-func (u *UserAPI) getUser() error {
-	c := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest("GET", idcloudhostUserApiUrl, nil)
+
+func (u *UserAPI) Get() error {
+	var c HTTPClient
+	c = &http.Client{}
+	req, err := http.NewRequest("GET", u.ApiEndpoint, nil)
 	if err != nil {
 		return fmt.Errorf("Got error %s", err.Error())
 	}
@@ -49,14 +50,20 @@ func (u *UserAPI) getUser() error {
 		return fmt.Errorf("Got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if r.StatusCode != http.StatusOK {
-		if r.StatusCode == http.StatusForbidden {
-			return AuthenticationError()
-		}
-		if r.StatusCode == http.StatusUnauthorized {
-			return AuthenticationError()
-		}
-		return UnknownError()
+	if err = checkError(r.StatusCode); err != nil {
+		return err
 	}
 	return json.NewDecoder(r.Body).Decode(&u.User)
+}
+
+func (u *UserAPI) Create() error {
+	return NotImplementedError()
+}
+
+func (u *UserAPI) Modify() error {
+	return NotImplementedError()
+}
+
+func (u *UserAPI) Delete() error {
+	return NotImplementedError()
 }

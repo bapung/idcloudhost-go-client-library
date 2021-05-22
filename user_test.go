@@ -5,20 +5,18 @@ import (
 	"testing"
 )
 
-const userAuthToken = ""
-
 func TestGetUser(t *testing.T) {
 	u := UserAPI{}
-	u.setAuthToken(userAuthToken)
-	if err := u.getUser(); err != nil {
+	u.Init(userAuthToken)
+	if err := u.Get(); err != nil {
 		t.Fatal(err)
 	}
 	log.Println(u.User)
 }
 func TestGetUserNotAuthorized(t *testing.T) {
 	u := UserAPI{}
-	u.setAuthToken("non-valid-auth-token")
-	if err := u.getUser(); err == nil {
+	u.Init("non-valid-auth-token")
+	if err := u.Get(); err == nil {
 		t.Fatal(err)
 	}
 }
