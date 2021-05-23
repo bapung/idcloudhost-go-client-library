@@ -2,7 +2,7 @@ package idcloudhost
 
 type DiskStorage struct {
 	CreatedAt string   `json:"created_at"`
-	Id        string   `json:"id"`
+	Id        int      `json:"id"`
 	Name      string   `json:"name"`
 	Pool      string   `json:"pool"`
 	Primary   bool     `json:"primary"`
