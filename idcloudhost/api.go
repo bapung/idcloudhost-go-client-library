@@ -1,43 +1,31 @@
 package idcloudhost
 
 import (
-	"errors"
 	"net/http"
 )
 
 type API interface {
-	Init(string)
-	Get(interface{}) bool
-	Create(interface{}) bool
-	Modify(interface{}) bool
-	Delete() bool
+	Init(string, string) error
+	Get(string) error
+	Create(map[string]interface{}) error
+	Modify(map[string]interface{}) error
+	Delete(string) error
+}
+
+type APIClient struct {
+	APIs []API
 }
 
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-func AuthenticationError() error {
-	return errors.New("Authentication failed.")
-}
-
-func UnknownError() error {
-	return errors.New("Unknown Error.")
-}
-
-func NotImplementedError() error {
-	return errors.New("Not Implemented.")
-}
-
-func checkError(StatusCode int) error {
-	if StatusCode != http.StatusOK {
-		if StatusCode == http.StatusForbidden {
-			return AuthenticationError()
-		}
-		if StatusCode == http.StatusUnauthorized {
-			return AuthenticationError()
-		}
-		return UnknownError()
+func NewClient(authToken string, loc string) APIClient {
+	vmApi := VirtualMachineAPI{}
+	// add more client here
+	client := []API{&vmApi}
+	for _, c := range client {
+		c.Init(authToken, loc)
 	}
-	return nil
+	return APIClient{client}
 }

@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-const userAuthToken = "trKpXPghuLPWWV35s3YWLsLCF8N1dZFs"
+const userAuthToken = ""
 
 func TestGetVMbyUUID(t *testing.T) {
 	targetUuid := "a28b4e97-c648-44ed-8217-f9d066dc6a91"

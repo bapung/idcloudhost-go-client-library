@@ -84,30 +84,30 @@ func (vm *VirtualMachineAPI) Init(authToken string, location string) error {
 	return nil
 }
 
-func (vm *VirtualMachineAPI) Create(newVm *NewVM) error {
+func (vm *VirtualMachineAPI) Create(newVm map[string]interface{}) error {
 	var c HTTPClient
 	c = &http.Client{}
 	data := url.Values{}
-	data.Set("backup", newVm.Backup)
-	data.Set("billing_account_id", fmt.Sprint(newVm.BillingAccount))
-	data.Set("description", newVm.Description)
-	data.Set("disks", fmt.Sprint(newVm.Disks))
-	data.Set("password", newVm.InitialPassword)
-	data.Set("os_name", newVm.OSName)
-	data.Set("os_version", newVm.OSVersion)
-	data.Set("vcpu", fmt.Sprint(newVm.VCPU))
-	data.Set("ram", string(newVm.MemoryM))
-	if newVm.PublicIP != "" {
-		data.Set("public_key", newVm.PublicIP)
+	data.Set("backup", v["backup"])
+	data.Set("billing_account_id", v["billing_account"].(string))
+	data.Set("description", v["description"])
+	data.Set("disks", v["disks"].(string))
+	data.Set("password", v["password"])
+	data.Set("os_name", v["os_name"])
+	data.Set("os_version", v["os_version"])
+	data.Set("vcpu", v["vcpu"].(string))
+	data.Set("ram", v["ram"].(string))
+	if v["public_key"] != "" {
+		data.Set("public_key", v["public_key"])
 	}
-	if newVm.SourceReplica != "" {
-		data.Set("source_replica", newVm.SourceReplica)
+	if v["source_replica"] != "" {
+		data.Set("source_replica", v["source_replica"])
 	}
-	if newVm.SourceUUID != "" {
-		data.Set("source_uuid", newVm.SourceUUID)
+	if v["source_uuid "] != "" {
+		data.Set("source_uuid", v["source_uuid)"])
 	}
-	if newVm.SourceUUID != "" {
-		data.Set("reserve_public_ip", newVm.PublicIP)
+	if v["reserve_public_ip"] != "" {
+		data.Set("reserve_public_ip", v["reserve_public_ip"].(string))
 	}
 	req, err := http.NewRequest("POST", vm.ApiEndpoint,
 		strings.NewReader(data.Encode()))
@@ -167,14 +167,14 @@ func (vm *VirtualMachineAPI) ListAll() error {
 	return json.Unmarshal(bodyByte, &vm.VMListMap)
 }
 
-func (vm *VirtualMachineAPI) Modify(uuid string, name string, ram int, vcpu int) error {
+func (vm *VirtualMachineAPI) Modify(v map[string]interface{}) error {
 	var c HTTPClient
 	c = &http.Client{}
 	data := url.Values{}
-	data.Set("uuid", uuid)
-	data.Set("name", name)
-	data.Set("ram", fmt.Sprint(ram))
-	data.Set("vcpu", fmt.Sprint(vcpu))
+	data.Set("uuid", v["uuid"].(string))
+	data.Set("name", v["name"].(string))
+	data.Set("ram", v["ram"].(string))
+	data.Set("vcpu", v["vcpu"].(string)))
 	req, err := http.NewRequest("PATCH", vm.ApiEndpoint,
 		strings.NewReader(data.Encode()))
 	if err != nil {
