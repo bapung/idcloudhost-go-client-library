@@ -164,7 +164,7 @@ func (vm *VirtualMachineAPI) ListAll() error {
 		return err
 	}
 	bodyByte, err := ioutil.ReadAll(r.Body)
-	return json.Unmarshal(bodyByte, &vm.VMList)
+	return json.Unmarshal(bodyByte, &vm.VMListMap)
 }
 
 func (vm *VirtualMachineAPI) Modify(uuid string, name string, ram int, vcpu int) error {
