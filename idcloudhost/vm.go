@@ -16,7 +16,9 @@ type VirtualMachineAPI struct {
 	Location    string
 	ApiEndpoint string
 	VM          *VM
-	VMList      []*VM
+	VMMap       map[string]interface{}
+	VMList      []VM
+	VMListMap   []map[string]interface{}
 }
 
 type vmList struct {
@@ -121,7 +123,7 @@ func (vm *VirtualMachineAPI) Create(newVm *NewVM) error {
 	if err = checkError(r.StatusCode); err != nil {
 		return err
 	}
-	return json.NewDecoder(r.Body).Decode(&vm.VM)
+	return json.NewDecoder(r.Body).Decode(&vm.VMMap)
 }
 
 func (vm *VirtualMachineAPI) Get(uuid string) error {
@@ -141,7 +143,7 @@ func (vm *VirtualMachineAPI) Get(uuid string) error {
 	if err = checkError(r.StatusCode); err != nil {
 		return err
 	}
-	return json.NewDecoder(r.Body).Decode(&vm.VM)
+	return json.NewDecoder(r.Body).Decode(&vm.VMMap)
 }
 
 func (vm *VirtualMachineAPI) ListAll() error {

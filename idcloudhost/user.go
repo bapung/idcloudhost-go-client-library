@@ -10,6 +10,7 @@ type UserAPI struct {
 	AuthToken   string
 	ApiEndpoint string
 	User        *User
+	UserMap     map[string]interface{}
 }
 
 type User struct {

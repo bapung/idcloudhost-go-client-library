@@ -1,11 +1,13 @@
 package idcloudhost
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"testing"
 )
 
-const userAuthToken = "jUeD8GC6bx3esE8LjGQutPEZYnPMjNxa"
+const userAuthToken = "trKpXPghuLPWWV35s3YWLsLCF8N1dZFs"
 
 func TestGetVMbyUUID(t *testing.T) {
 	targetUuid := "a28b4e97-c648-44ed-8217-f9d066dc6a91"
@@ -15,7 +17,12 @@ func TestGetVMbyUUID(t *testing.T) {
 	if err := v.Get(targetUuid); err != nil {
 		t.Fatal(err)
 	}
-	log.Println(v.VM)
+	b, err := json.Marshal(v.VMMap)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	log.Println(string(b))
 }
 
 func TestListAllVMs(t *testing.T) {
@@ -25,5 +32,12 @@ func TestListAllVMs(t *testing.T) {
 	if err := v.ListAll(); err != nil {
 		t.Fatal(err)
 	}
-	log.Println(v.VMList[0])
+	var inInterface []map[string]interface{}
+	inrec, _ := json.Marshal(v.VMListMap)
+	log.Println(json.Unmarshal(inrec, &inInterface))
+
+	// iterate through inrecs
+	for field, val := range inInterface {
+		log.Println("KV Pair: ", field, val)
+	}
 }
