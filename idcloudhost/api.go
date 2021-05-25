@@ -13,19 +13,22 @@ type API interface {
 }
 
 type APIClient struct {
-	APIs []API
+	APIs map[string]API
 }
 
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-func NewClient(authToken string, loc string) (APIClient, error) {
-	vmApi := VirtualMachineAPI{}
-	// add more client here
-	client := []API{&vmApi}
-	for _, c := range client {
-		c.Init(authToken, loc)
+func NewClient(authToken string, loc string) (*APIClient, error) {
+	c := APIClient{}
+	var m = map[string]API{
+		"vm": &VirtualMachineAPI{},
 	}
-	return APIClient{client}, nil
+	c.APIs = m
+	// add more client here
+	for _, k := range c.APIs {
+		k.Init(authToken, loc)
+	}
+	return &c, nil
 }
