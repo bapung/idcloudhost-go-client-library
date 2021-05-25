@@ -174,7 +174,7 @@ func (vm *VirtualMachineAPI) Modify(v map[string]interface{}) error {
 	data.Set("uuid", v["uuid"].(string))
 	data.Set("name", v["name"].(string))
 	data.Set("ram", v["ram"].(string))
-	data.Set("vcpu", v["vcpu"].(string)))
+	data.Set("vcpu", v["vcpu"].(string))
 	req, err := http.NewRequest("PATCH", vm.ApiEndpoint,
 		strings.NewReader(data.Encode()))
 	if err != nil {

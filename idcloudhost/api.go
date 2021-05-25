@@ -20,12 +20,12 @@ type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-func NewClient(authToken string, loc string) APIClient {
+func NewClient(authToken string, loc string) (APIClient, error) {
 	vmApi := VirtualMachineAPI{}
 	// add more client here
 	client := []API{&vmApi}
 	for _, c := range client {
 		c.Init(authToken, loc)
 	}
-	return APIClient{client}
+	return APIClient{client}, nil
 }
