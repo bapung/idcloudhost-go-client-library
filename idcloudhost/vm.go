@@ -84,7 +84,7 @@ func (vm *VirtualMachineAPI) Init(authToken string, location string) error {
 	return nil
 }
 
-func (vm *VirtualMachineAPI) Create(newVm map[string]interface{}) error {
+func (vm *VirtualMachineAPI) Create(v map[string]interface{}) error {
 	var c HTTPClient
 	c = &http.Client{}
 	data := url.Values{}
