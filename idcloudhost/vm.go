@@ -88,23 +88,23 @@ func (vm *VirtualMachineAPI) Create(v map[string]interface{}) error {
 	var c HTTPClient
 	c = &http.Client{}
 	data := url.Values{}
-	data.Set("backup", v["backup"])
+	data.Set("backup", v["backup"].(string))
 	data.Set("billing_account_id", v["billing_account"].(string))
-	data.Set("description", v["description"])
+	data.Set("description", v["description"].(string))
 	data.Set("disks", v["disks"].(string))
-	data.Set("password", v["password"])
-	data.Set("os_name", v["os_name"])
-	data.Set("os_version", v["os_version"])
+	data.Set("password", v["password"].(string))
+	data.Set("os_name", v["os_name"].(string))
+	data.Set("os_version", v["os_version"].(string))
 	data.Set("vcpu", v["vcpu"].(string))
 	data.Set("ram", v["ram"].(string))
 	if v["public_key"] != "" {
-		data.Set("public_key", v["public_key"])
+		data.Set("public_key", v["public_key"].(string))
 	}
 	if v["source_replica"] != "" {
-		data.Set("source_replica", v["source_replica"])
+		data.Set("source_replica", v["source_replica"].(string))
 	}
 	if v["source_uuid "] != "" {
-		data.Set("source_uuid", v["source_uuid)"])
+		data.Set("source_uuid", v["source_uuid)"].(string))
 	}
 	if v["reserve_public_ip"] != "" {
 		data.Set("reserve_public_ip", v["reserve_public_ip"].(string))
