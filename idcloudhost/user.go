@@ -7,10 +7,11 @@ import (
 )
 
 type UserAPI struct {
-	AuthToken   string
-	ApiEndpoint string
-	User        *User
-	UserMap     map[string]interface{}
+	AuthToken      string
+	ApiEndpoint    string
+	BillingAccount []string
+	User           *User
+	UserMap        map[string]interface{}
 }
 
 type User struct {
@@ -33,12 +34,13 @@ type UserProfileData struct {
 	Email     string `json:"email"`
 }
 
-func (u *UserAPI) Init(authToken string) {
+func (u *UserAPI) Init(authToken string, location string) error {
 	u.AuthToken = authToken
 	u.ApiEndpoint = "https://api.idcloudhost.com/v1/user-resource/user"
+	return nil
 }
 
-func (u *UserAPI) Get() error {
+func (u *UserAPI) Get(uuid string) error {
 	var c HTTPClient
 	c = &http.Client{}
 	req, err := http.NewRequest("GET", u.ApiEndpoint, nil)

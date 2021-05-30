@@ -6,5 +6,5 @@ import (
 
 func main() {
 	u := idcloudhost.UserAPI{}
-	u.Init("test")
+	u.Init("test", "")
 }

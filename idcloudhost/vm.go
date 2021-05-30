@@ -8,17 +8,19 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
 type VirtualMachineAPI struct {
-	AuthToken   string
-	Location    string
-	ApiEndpoint string
-	VM          *VM
-	VMMap       map[string]interface{}
-	VMList      []VM
-	VMListMap   []map[string]interface{}
+	AuthToken      string
+	Location       string
+	BillingAccount int
+	ApiEndpoint    string
+	VM             *VM
+	VMMap          map[string]interface{}
+	VMList         []VM
+	VMListMap      []map[string]interface{}
 }
 
 type vmList struct {
@@ -88,32 +90,37 @@ func (vm *VirtualMachineAPI) Create(v map[string]interface{}) error {
 	var c HTTPClient
 	c = &http.Client{}
 	data := url.Values{}
-	data.Set("backup", v["backup"].(string))
-	data.Set("billing_account_id", v["billing_account"].(string))
-	data.Set("description", v["description"].(string))
-	data.Set("disks", v["disks"].(string))
+	data.Set("backup", strconv.FormatBool(v["backup"].(bool)))
+	data.Set("billing_account_id", strconv.Itoa(v["billing_account"].(int)))
+	data.Set("disks", strconv.Itoa(v["disks"].(int)))
+	data.Set("name", v["name"].(string))
+	data.Set("username", v["username"].(string))
 	data.Set("password", v["password"].(string))
 	data.Set("os_name", v["os_name"].(string))
 	data.Set("os_version", v["os_version"].(string))
-	data.Set("vcpu", v["vcpu"].(string))
-	data.Set("ram", v["ram"].(string))
-	if v["public_key"] != "" {
+	data.Set("vcpu", strconv.Itoa(v["vcpu"].(int)))
+	data.Set("ram", strconv.Itoa(v["ram"].(int)))
+	if v["description"] != nil {
+		data.Set("description", v["description"].(string))
+	}
+	if v["public_key"] != nil {
 		data.Set("public_key", v["public_key"].(string))
 	}
-	if v["source_replica"] != "" {
+	if v["source_replica"] != nil {
 		data.Set("source_replica", v["source_replica"].(string))
 	}
-	if v["source_uuid "] != "" {
+	if v["source_uuid "] != nil {
 		data.Set("source_uuid", v["source_uuid)"].(string))
 	}
-	if v["reserve_public_ip"] != "" {
-		data.Set("reserve_public_ip", v["reserve_public_ip"].(string))
+	if v["reserve_public_ip"] != nil {
+		data.Set("reserve_public_ip", strconv.FormatBool(v["reserve_public_ip"].(bool)))
 	}
 	req, err := http.NewRequest("POST", vm.ApiEndpoint,
 		strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("Got error %s", err.Error())
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("apiKey", vm.AuthToken)
 	r, err := c.Do(req)
 	if err != nil {
@@ -181,6 +188,7 @@ func (vm *VirtualMachineAPI) Modify(v map[string]interface{}) error {
 		return fmt.Errorf("Got error %s", err.Error())
 	}
 	req.Header.Set("apiKey", vm.AuthToken)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r, err := c.Do(req)
 	if err != nil {
 		return fmt.Errorf("Got error %s", err.Error())
