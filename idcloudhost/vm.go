@@ -86,6 +86,9 @@ func (vm *VirtualMachineAPI) Init(authToken string, location string) error {
 }
 
 func (vm *VirtualMachineAPI) Create(v map[string]interface{}) error {
+	if err := validateVirtualMachineParam(v); err != nil {
+		return err
+	}
 	var c HTTPClient = &http.Client{}
 	data := url.Values{}
 	data.Set("backup", strconv.FormatBool(v["backup"].(bool)))
@@ -205,6 +208,7 @@ func (vm *VirtualMachineAPI) Delete(uuid string) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	req.Header.Set("apiKey", vm.AuthToken)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r, err := c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
