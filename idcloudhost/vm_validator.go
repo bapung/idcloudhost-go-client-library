@@ -22,11 +22,10 @@ func validateUsername(username string) bool {
 	return matched
 }
 
-func verifyPassword(pass string) bool {
+func validatePassword(pass string) bool {
 	len := 0
-	letter := true
+	letter := false
 	upper := false
-	special := true
 	number := false
 
 	for _, c := range pass {
@@ -35,16 +34,14 @@ func verifyPassword(pass string) bool {
 			number = true
 		case unicode.IsUpper(c):
 			upper = true
-		case unicode.IsPunct(c) || unicode.IsSymbol(c):
-			special = true
-		case unicode.IsLetter(c):
+		case unicode.IsLower(c):
 			letter = true
 		default:
 			//return false, false, false, false
 		}
 		len++
 	}
-	if number && upper && special && letter && len > 7 {
+	if number && upper && letter && len > 7 {
 		return true
 	}
 	return false
@@ -80,7 +77,7 @@ func validateVirtualMachineParam(v map[string]interface{}) error {
 	}
 
 	password := v["password"].(string)
-	if !verifyPassword(password) {
+	if !validatePassword(password) {
 		return fmt.Errorf("password must contain at least one lowercase and one uppercase ASCII letter (a-z, A-Z) and at least one digit (0-9) and has minimum length of 8 characters")
 	}
 
