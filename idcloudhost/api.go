@@ -5,7 +5,7 @@ import (
 )
 
 type API interface {
-	Init(string, string) error
+	Init(HTTPClient, string, string) error
 	Get(string) error
 	Create(map[string]interface{}) error
 	Modify(map[string]interface{}) error
@@ -21,14 +21,15 @@ type HTTPClient interface {
 }
 
 func NewClient(authToken string, loc string) (*APIClient, error) {
-	c := APIClient{}
+	api := APIClient{}
+	c := http.Client{}
 	var m = map[string]API{
 		"vm": &VirtualMachineAPI{},
 	}
-	c.APIs = m
+	api.APIs = m
 	// add more client here
-	for _, k := range c.APIs {
-		k.Init(authToken, loc)
+	for _, k := range api.APIs {
+		k.Init(&c, authToken, loc)
 	}
-	return &c, nil
+	return &api, nil
 }

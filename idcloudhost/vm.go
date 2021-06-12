@@ -12,6 +12,7 @@ import (
 )
 
 type VirtualMachineAPI struct {
+	c              HTTPClient
 	AuthToken      string
 	Location       string
 	BillingAccount int
@@ -68,7 +69,8 @@ type NewVM struct {
 	PublicIP        string `json:"reserve_public_ip",default:"true"`
 }
 
-func (vm *VirtualMachineAPI) Init(authToken string, location string) error {
+func (vm *VirtualMachineAPI) Init(c HTTPClient, authToken string, location string) error {
+	vm.c = c
 	vm.AuthToken = authToken
 	vm.Location = location
 	vm.ApiEndpoint = fmt.Sprintf(
@@ -89,7 +91,6 @@ func (vm *VirtualMachineAPI) Create(v map[string]interface{}) error {
 	if err := validateVirtualMachineParam(v); err != nil {
 		return err
 	}
-	var c HTTPClient = &http.Client{}
 	data := url.Values{}
 	data.Set("backup", strconv.FormatBool(v["backup"].(bool)))
 	data.Set("billing_account_id", strconv.Itoa(v["billing_account"].(int)))
@@ -123,7 +124,7 @@ func (vm *VirtualMachineAPI) Create(v map[string]interface{}) error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("apiKey", vm.AuthToken)
-	r, err := c.Do(req)
+	r, err := vm.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
@@ -135,14 +136,13 @@ func (vm *VirtualMachineAPI) Create(v map[string]interface{}) error {
 }
 
 func (vm *VirtualMachineAPI) Get(uuid string) error {
-	var c HTTPClient = &http.Client{}
 	url := fmt.Sprintf("%s?uuid=%s", vm.ApiEndpoint, uuid)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	req.Header.Set("apiKey", vm.AuthToken)
-	r, err := c.Do(req)
+	r, err := vm.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
@@ -154,14 +154,13 @@ func (vm *VirtualMachineAPI) Get(uuid string) error {
 }
 
 func (vm *VirtualMachineAPI) ListAll() error {
-	var c HTTPClient = &http.Client{}
 	url := fmt.Sprintf("%s/list", vm.ApiEndpoint)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	req.Header.Set("apiKey", vm.AuthToken)
-	r, err := c.Do(req)
+	r, err := vm.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
@@ -177,7 +176,6 @@ func (vm *VirtualMachineAPI) ListAll() error {
 }
 
 func (vm *VirtualMachineAPI) Modify(v map[string]interface{}) error {
-	var c HTTPClient = &http.Client{}
 	data := url.Values{}
 	data.Set("uuid", v["uuid"].(string))
 	if v["name"] != nil {
@@ -196,7 +194,7 @@ func (vm *VirtualMachineAPI) Modify(v map[string]interface{}) error {
 	}
 	req.Header.Set("apiKey", vm.AuthToken)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	r, err := c.Do(req)
+	r, err := vm.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
@@ -205,7 +203,6 @@ func (vm *VirtualMachineAPI) Modify(v map[string]interface{}) error {
 }
 
 func (vm *VirtualMachineAPI) Delete(uuid string) error {
-	var c HTTPClient = &http.Client{}
 	data := url.Values{}
 	data.Set("uuid", uuid)
 	req, err := http.NewRequest("DELETE", vm.ApiEndpoint,
@@ -215,7 +212,7 @@ func (vm *VirtualMachineAPI) Delete(uuid string) error {
 	}
 	req.Header.Set("apiKey", vm.AuthToken)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	r, err := c.Do(req)
+	r, err := vm.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
