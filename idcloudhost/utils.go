@@ -6,15 +6,15 @@ import (
 )
 
 func AuthenticationError() error {
-	return errors.New("Authentication failed.")
+	return errors.New("authentication failed")
 }
 
 func UnknownError() error {
-	return errors.New("Unknown Error.")
+	return errors.New("unknown error")
 }
 
 func NotImplementedError() error {
-	return errors.New("Not Implemented.")
+	return errors.New("not implemented")
 }
 
 func checkError(StatusCode int) error {

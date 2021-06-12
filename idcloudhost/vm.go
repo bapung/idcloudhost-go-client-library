@@ -180,9 +180,15 @@ func (vm *VirtualMachineAPI) Modify(v map[string]interface{}) error {
 	var c HTTPClient = &http.Client{}
 	data := url.Values{}
 	data.Set("uuid", v["uuid"].(string))
-	data.Set("name", v["name"].(string))
-	data.Set("ram", strconv.Itoa(v["ram"].(int)))
-	data.Set("vcpu", strconv.Itoa(v["vcpu"].(int)))
+	if v["name"] != nil {
+		data.Set("name", v["name"].(string))
+	}
+	if v["ram"] != nil {
+		data.Set("ram", strconv.Itoa(v["ram"].(int)))
+	}
+	if v["vcpu"] != nil {
+		data.Set("vcpu", strconv.Itoa(v["vcpu"].(int)))
+	}
 	req, err := http.NewRequest("PATCH", vm.ApiEndpoint,
 		strings.NewReader(data.Encode()))
 	if err != nil {
