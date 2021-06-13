@@ -54,19 +54,21 @@ type VM struct {
 type omit *struct{}
 
 type NewVM struct {
-	Backup          string `json:"backup",default:"false"`
-	BillingAccount  int    `json:"billing_account_id",default:0`
-	Description     string `json:"description"`
+	Backup          bool   `json:"backup,omitempty",default:false`
+	BillingAccount  int    `json:"billing_account,omitempty",default:0`
+	Description     string `json:"description",omitempty`
 	Disks           int    `json:"disks"`
+	Username        string `json:"username"`
 	InitialPassword string `json:"password"`
 	OSName          string `json:"os_name"`
 	OSVersion       string `json:"os_version"`
 	PublicKey       string `json:"public_key,omitempty"`
-	MemoryM         string `json:"ram"`
+	Name            string `json:"name"`
+	MemoryM         int    `json:"ram"`
 	SourceReplica   string `json:"source_replica,omitempty"`
 	SourceUUID      string `json:"source_uuid,omitempty"`
 	VCPU            int    `json:"vcpu"`
-	PublicIP        string `json:"reserve_public_ip",default:"true"`
+	PublicIP        string `json:"reserve_public_ip,omitempty",default:"true"`
 }
 
 func (vm *VirtualMachineAPI) Init(c HTTPClient, authToken string, location string) error {
@@ -88,11 +90,10 @@ func (vm *VirtualMachineAPI) Init(c HTTPClient, authToken string, location strin
 }
 
 func (vm *VirtualMachineAPI) Create(v map[string]interface{}) error {
-	if err := validateVirtualMachineParam(v); err != nil {
+	if err := validateVmCreateFields(v); err != nil {
 		return err
 	}
 	data := url.Values{}
-	data.Set("backup", strconv.FormatBool(v["backup"].(bool)))
 	data.Set("billing_account_id", strconv.Itoa(v["billing_account"].(int)))
 	data.Set("disks", strconv.Itoa(v["disks"].(int)))
 	data.Set("name", v["name"].(string))
@@ -102,6 +103,9 @@ func (vm *VirtualMachineAPI) Create(v map[string]interface{}) error {
 	data.Set("os_version", v["os_version"].(string))
 	data.Set("vcpu", strconv.Itoa(v["vcpu"].(int)))
 	data.Set("ram", strconv.Itoa(v["ram"].(int)))
+	if v["backup"] != nil {
+		data.Set("backup", strconv.FormatBool(v["backup"].(bool)))
+	}
 	if v["description"] != nil {
 		data.Set("description", v["description"].(string))
 	}
@@ -176,6 +180,9 @@ func (vm *VirtualMachineAPI) ListAll() error {
 }
 
 func (vm *VirtualMachineAPI) Modify(v map[string]interface{}) error {
+	if err := validateVmModifyFields(v); err != nil {
+		return err
+	}
 	data := url.Values{}
 	data.Set("uuid", v["uuid"].(string))
 	if v["name"] != nil {

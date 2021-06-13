@@ -11,7 +11,7 @@ func TestNonValidName(t *testing.T) {
 		"ax1", "-startwhyphen", "endwhypen-", "contains@symbol", "contains_underscore",
 	}
 	for _, name := range NonValidName {
-		if validateVmName(name) {
+		if err := validateVmName(name); err == nil {
 			t.Fatal(fmt.Errorf("validate VM name %s should return False", name))
 		}
 	}
@@ -26,7 +26,7 @@ func TestValidOS(t *testing.T) {
 
 	for k, v := range ValidOSes {
 		for _, i := range v {
-			if !validateOS(k, i) {
+			if err := validateOS(k, i); err != nil {
 				t.Fatal(fmt.Errorf("validate OS %s %s should return true", k, v))
 			}
 		}
@@ -40,7 +40,7 @@ func TestNonValidOS(t *testing.T) {
 
 	for k, v := range ValidOSes {
 		for _, i := range v {
-			if validateOS(k, i) {
+			if err := validateOS(k, i); err == nil {
 				t.Fatal(fmt.Errorf("validate OS %s %s should return false", k, v))
 			}
 		}
@@ -55,7 +55,7 @@ func TestNonValidPassword(t *testing.T) {
 		"ABCDEF12345":  "password does not contain at least 1 lowercase character",
 	}
 	for pass, errStr := range PasswordAndErr {
-		if validatePassword(pass) {
+		if err := validatePassword(pass); err == nil {
 			t.Fatal(fmt.Errorf("this password is valid: %s; should not valid in this test", pass))
 		}
 		log.Printf("expected error: %s for password: %s", errStr, pass)
