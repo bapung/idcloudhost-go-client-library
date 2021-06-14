@@ -19,10 +19,9 @@ func (H HTTPClientMock) Do(r *http.Request) (*http.Response, error) {
 const userAuthToken = "xxxxx"
 
 var (
-	c          = &HTTPClientMock{}
-	v          = VirtualMachineAPI{}
-	targetUuid = "validuuid-cdb2-1234-b6f8-8f7deadbeef0"
-	loc        = "jkt01"
+	c   = &HTTPClientMock{}
+	v   = VirtualMachineAPI{}
+	loc = "jkt01"
 )
 
 func TestGetVMbyUUID(t *testing.T) {

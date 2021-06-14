@@ -7,6 +7,7 @@ import (
 )
 
 type UserAPI struct {
+	c              HTTPClient
 	AuthToken      string
 	ApiEndpoint    string
 	BillingAccount []string
@@ -34,23 +35,22 @@ type UserProfileData struct {
 	Email     string `json:"email"`
 }
 
-func (u *UserAPI) Init(authToken string, location string) error {
+func (u *UserAPI) Init(c HTTPClient, authToken string, location string) error {
+	u.c = c
 	u.AuthToken = authToken
 	u.ApiEndpoint = "https://api.idcloudhost.com/v1/user-resource/user"
 	return nil
 }
 
 func (u *UserAPI) Get(uuid string) error {
-	var c HTTPClient
-	c = &http.Client{}
 	req, err := http.NewRequest("GET", u.ApiEndpoint, nil)
 	if err != nil {
-		return fmt.Errorf("Got error %s", err.Error())
+		return fmt.Errorf("got error %s", err.Error())
 	}
 	req.Header.Set("apiKey", u.AuthToken)
-	r, err := c.Do(req)
+	r, err := u.c.Do(req)
 	if err != nil {
-		return fmt.Errorf("Got error %s", err.Error())
+		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
 	if err = checkError(r.StatusCode); err != nil {
