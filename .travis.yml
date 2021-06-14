@@ -1,5 +1,4 @@
 language: go
 go:
-  - 1.15
   - 1.16
 if: branch IN (master, dev)
