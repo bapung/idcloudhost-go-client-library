@@ -24,38 +24,39 @@ type DiskStorage struct {
 	UUID      string   `json:"uuid"`
 }
 
-func (vm *VirtualMachineAPI) AttachDisk(v map[string]interface{}) error {
-	var c HTTPClient = &http.Client{}
+func (vm *VirtualMachineAPI) AttachDisk(vmUUID string, diskSize int) (*DiskStorage, error) {
 	var disk *DiskStorage
 	diskApiEndpoint := fmt.Sprintf("%s/%s", vm.ApiEndpoint, "disk")
 	data := url.Values{}
-	data.Set("uuid", v["uuid"].(string))
-	data.Set("size_gb", strconv.Itoa(v["disk_size"].(int)))
+	data.Set("uuid", vmUUID)
+	data.Set("size_gb", strconv.Itoa(diskSize))
 	req, err := http.NewRequest("POST", diskApiEndpoint,
 		strings.NewReader(data.Encode()))
 	if err != nil {
-		return fmt.Errorf("got error %s", err.Error())
+		return nil, fmt.Errorf("got error %s", err.Error())
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("apiKey", vm.AuthToken)
-	r, err := c.Do(req)
+	r, err := vm.c.Do(req)
 	if err != nil {
-		return fmt.Errorf("got error %s", err.Error())
+		return nil, fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
 	if err = checkError(r.StatusCode); err != nil {
-		return err
+		return nil, err
 	}
-	return json.NewDecoder(r.Body).Decode(&disk)
+	if err := json.NewDecoder(r.Body).Decode(&disk); err != nil {
+		return nil, err
+	}
+	return disk, nil
 }
 
-func (vm *VirtualMachineAPI) DeleteDisk(v map[string]interface{}) error {
-	var c HTTPClient = &http.Client{}
+func (vm *VirtualMachineAPI) DeleteDisk(vmUUID string, diskUUID string) error {
 	var resp map[string]interface{}
 	diskApiEndpoint := fmt.Sprintf("%s/%s", vm.ApiEndpoint, "disk")
 	data := url.Values{}
-	data.Set("uuid", v["uuid"].(string))
-	data.Set("storage_uuid", v["disk_uuid"].(string))
+	data.Set("uuid", vmUUID)
+	data.Set("storage_uuid", diskUUID)
 	req, err := http.NewRequest("DELETE", diskApiEndpoint,
 		strings.NewReader(data.Encode()))
 	if err != nil {
@@ -63,7 +64,7 @@ func (vm *VirtualMachineAPI) DeleteDisk(v map[string]interface{}) error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("apiKey", vm.AuthToken)
-	r, err := c.Do(req)
+	r, err := vm.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
@@ -80,14 +81,13 @@ func (vm *VirtualMachineAPI) DeleteDisk(v map[string]interface{}) error {
 	return nil
 }
 
-func (vm *VirtualMachineAPI) ResizeDisk(v map[string]interface{}) error {
-	var c HTTPClient = &http.Client{}
+func (vm *VirtualMachineAPI) ResizeDisk(vmUUID string, diskUUID string, newDiskSize int) error {
 	var resp map[string]interface{}
 	diskApiEndpoint := fmt.Sprintf("%s/%s", vm.ApiEndpoint, "disk")
 	data := url.Values{}
-	data.Set("uuid", v["uuid"].(string))
-	data.Set("disk_uuid", v["disk_uuid"].(string))
-	data.Set("size_gb", strconv.Itoa(v["disk_size"].(int)))
+	data.Set("uuid", vmUUID)
+	data.Set("disk_uuid", diskUUID)
+	data.Set("size_gb", strconv.Itoa(newDiskSize))
 	req, err := http.NewRequest("DELETE", diskApiEndpoint,
 		strings.NewReader(data.Encode()))
 	if err != nil {
@@ -95,7 +95,7 @@ func (vm *VirtualMachineAPI) ResizeDisk(v map[string]interface{}) error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("apiKey", vm.AuthToken)
-	r, err := c.Do(req)
+	r, err := vm.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
@@ -113,7 +113,6 @@ func (vm *VirtualMachineAPI) ResizeDisk(v map[string]interface{}) error {
 }
 
 func (vm *VirtualMachineAPI) ToggleAutoBackup(uuid string) error {
-	var c HTTPClient = &http.Client{}
 	backupApiEndpoint := fmt.Sprintf("%s/%s", vm.ApiEndpoint, "backup")
 	data := url.Values{}
 	data.Set("uuid", uuid)
@@ -124,7 +123,7 @@ func (vm *VirtualMachineAPI) ToggleAutoBackup(uuid string) error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("apiKey", vm.AuthToken)
-	r, err := c.Do(req)
+	r, err := vm.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
