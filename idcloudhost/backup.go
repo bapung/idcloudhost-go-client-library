@@ -27,7 +27,7 @@ func (vm *VirtualMachineAPI) ToggleAutoBackup(uuid string) error {
 	if err = checkError(r.StatusCode); err != nil {
 		return err
 	}
-	if err = json.NewDecoder(r.Body).Decode(&vm.VMMap); err != nil {
+	if err = json.NewDecoder(r.Body).Decode(&vm.VM); err != nil {
 		return err
 	}
 	return nil

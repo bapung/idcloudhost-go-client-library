@@ -17,41 +17,33 @@ type VirtualMachineAPI struct {
 	Location       string
 	BillingAccount int
 	ApiEndpoint    string
-	VM             *VM
-	VMMap          map[string]interface{}
+	VM             VM
 	VMList         []VM
-	VMListMap      []map[string]interface{}
-}
-
-type vmList struct {
-	vm []VM
 }
 
 type VM struct {
-	Backup         bool           `json:"backup,omitempty"`
-	BillingAccount int            `json:"billing_account,omitempty"`
-	CreatedAt      string         `json:"created_at,omitempty"`
-	Description    string         `json:"description"`
-	Hostname       string         `json:"hostname,omitempty"`
-	HypervisorId   string         `json:"hypervisor_id,omitempty"`
-	Id             int            `json:"id,omitempty"`
-	MACAddress     string         `json:"mac,omitempty"`
-	MemoryM        int            `json:"ram"`
-	Name           string         `json:"name"`
-	OSName         string         `json:"os_name"`
-	OSVersion      string         `json:"os_version"`
-	PrivateIPv4    string         `json:"private_ipv4,omitempty"`
-	Status         string         `json:"status,omitempty"`
-	Storage        *[]DiskStorage `json:"storage,omitempty"`
-	Tags           []string       `json:"tags,omitempty"`
-	UpdatedAt      string         `json:"updated_at,omitempty"`
-	UserId         int            `json:"user_id,omitempty"`
-	Username       string         `json:"username"`
-	UUID           string         `json:"uuid,omitempty"`
-	VCPU           int            `json:"vcpu"`
+	Backup         bool          `json:"backup,omitempty"`
+	BillingAccount int           `json:"billing_account,omitempty"`
+	CreatedAt      string        `json:"created_at,omitempty"`
+	Description    string        `json:"description"`
+	Hostname       string        `json:"hostname,omitempty"`
+	HypervisorId   string        `json:"hypervisor_id,omitempty"`
+	Id             int           `json:"id,omitempty"`
+	MACAddress     string        `json:"mac,omitempty"`
+	Memory         int           `json:"ram"`
+	Name           string        `json:"name"`
+	OSName         string        `json:"os_name"`
+	OSVersion      string        `json:"os_version"`
+	PrivateIPv4    string        `json:"private_ipv4,omitempty"`
+	Status         string        `json:"status,omitempty"`
+	Storage        []DiskStorage `json:"storage,omitempty"`
+	Tags           []string      `json:"tags,omitempty"`
+	UpdatedAt      string        `json:"updated_at,omitempty"`
+	UserId         int           `json:"user_id,omitempty"`
+	Username       string        `json:"username"`
+	UUID           string        `json:"uuid,omitempty"`
+	VCPU           int           `json:"vcpu"`
 }
-
-type omit *struct{}
 
 type NewVM struct {
 	Backup          bool   `json:"backup,omitempty",default:false`
@@ -136,7 +128,7 @@ func (vm *VirtualMachineAPI) Create(v map[string]interface{}) error {
 	if err = checkError(r.StatusCode); err != nil {
 		return err
 	}
-	return json.NewDecoder(r.Body).Decode(&vm.VMMap)
+	return json.NewDecoder(r.Body).Decode(&vm.VM)
 }
 
 func (vm *VirtualMachineAPI) Get(uuid string) error {
@@ -154,7 +146,7 @@ func (vm *VirtualMachineAPI) Get(uuid string) error {
 	if err = checkError(r.StatusCode); err != nil {
 		return err
 	}
-	return json.NewDecoder(r.Body).Decode(&vm.VMMap)
+	return json.NewDecoder(r.Body).Decode(&vm.VM)
 }
 
 func (vm *VirtualMachineAPI) ListAll() error {
@@ -176,7 +168,7 @@ func (vm *VirtualMachineAPI) ListAll() error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	return json.Unmarshal(bodyByte, &vm.VMListMap)
+	return json.Unmarshal(bodyByte, &vm.VMList)
 }
 
 func (vm *VirtualMachineAPI) Modify(v map[string]interface{}) error {

@@ -77,7 +77,7 @@ func TestCreateDisk(t *testing.T) {
 			}, nil
 		}
 		testDiskApi.Bind(test.RequestData["vm_uuid"].(string))
-		err := testDiskApi.Create(test.RequestData)
+		err := testDiskApi.Create(test.RequestData["disk_size"].(int))
 		if err != nil && err.Error() != test.Error.Error() {
 			t.Fatalf("want %v, got %v", err, test.Error.Error())
 		}

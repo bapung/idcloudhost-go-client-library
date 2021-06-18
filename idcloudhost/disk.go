@@ -16,7 +16,7 @@ type DiskAPI struct {
 	Location    string
 	ApiEndpoint string
 	vmUUID      string
-	DiskList    []DiskStorage
+	DiskList    *[]DiskStorage
 	Disk        *DiskStorage
 }
 
@@ -75,19 +75,9 @@ func (d *DiskAPI) Get(uuid string) error {
 	if err != nil {
 		return err
 	}
-	disksInterface, ok := v.VMMap["storage"]
-	if !ok {
-		return fmt.Errorf("error get disk")
-	}
-	disksJson, err := json.Marshal(disksInterface)
-	if err != nil {
-		return err
-	}
-	if err := json.Unmarshal(disksJson, &d.DiskList); err != nil {
-		return err
-	}
+	d.DiskList = &v.VM.Storage
 
-	for _, disk := range d.DiskList {
+	for _, disk := range *(d.DiskList) {
 		if disk.UUID == uuid {
 			d.Disk = &disk
 			return nil
@@ -96,11 +86,10 @@ func (d *DiskAPI) Get(uuid string) error {
 	return DiskNotFoundError()
 }
 
-func (d *DiskAPI) Create(v map[string]interface{}) error {
+func (d *DiskAPI) Create(diskSize int) error {
 	if d.vmUUID == "" {
 		return DiskVmNotSpecifiedError()
 	}
-	diskSize := v["disk_size"].(int)
 	if err := validateDisks(diskSize); err != nil {
 		return err
 	}
@@ -159,16 +148,13 @@ func (d *DiskAPI) Delete(diskUUID string) error {
 	return nil
 }
 
-func (d *DiskAPI) Modify(v map[string]interface{}) error {
+func (d *DiskAPI) Modify(diskUUID string, newDiskSize int) error {
 	if d.vmUUID == "" {
 		return DiskVmNotSpecifiedError()
 	}
 	var resp map[string]interface{}
 	data := url.Values{}
-	vmUUID := v["vm_uuid"].(string)
-	diskUUID := v["disk_uuid"].(string)
-	newDiskSize := v["disk_size"].(int)
-	data.Set("uuid", vmUUID)
+	data.Set("uuid", d.vmUUID)
 	data.Set("disk_uuid", diskUUID)
 	data.Set("size_gb", strconv.Itoa(newDiskSize))
 	req, err := http.NewRequest("PATCH", d.ApiEndpoint,

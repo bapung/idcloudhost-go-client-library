@@ -3,6 +3,7 @@ package idcloudhost
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"testing"
@@ -53,6 +54,7 @@ func TestGetVMbyUUID(t *testing.T) {
 		if err != nil && err.Error() != test.Error.Error() {
 			t.Fatalf("want %v, got %v", err, test.Error.Error())
 		}
+		log.Println(testVmApi.VM)
 	}
 }
 func TestModify(t *testing.T) {
@@ -126,6 +128,7 @@ func TestListAllVMs(t *testing.T) {
 		if err != nil && err.Error() != test.Error.Error() {
 			t.Fatalf("want %v, got %v", err, test.Error.Error())
 		}
+		log.Println(testVmApi.VMList)
 	}
 }
 func TestCreateVM(t *testing.T) {
@@ -174,5 +177,6 @@ func TestCreateVM(t *testing.T) {
 		if err != nil && err.Error() != test.Error.Error() {
 			t.Fatalf("want %v, got %v", err, test.Error.Error())
 		}
+		log.Print(testVmApi.VM)
 	}
 }
