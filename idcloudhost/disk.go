@@ -171,7 +171,7 @@ func (d *DiskAPI) Modify(v map[string]interface{}) error {
 	data.Set("uuid", vmUUID)
 	data.Set("disk_uuid", diskUUID)
 	data.Set("size_gb", strconv.Itoa(newDiskSize))
-	req, err := http.NewRequest("DELETE", d.ApiEndpoint,
+	req, err := http.NewRequest("PATCH", d.ApiEndpoint,
 		strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())

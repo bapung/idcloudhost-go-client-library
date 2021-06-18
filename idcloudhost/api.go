@@ -24,7 +24,8 @@ func NewClient(authToken string, loc string) (*APIClient, error) {
 	api := APIClient{}
 	c := http.Client{}
 	var m = map[string]API{
-		"vm": &VirtualMachineAPI{},
+		"vm":   &VirtualMachineAPI{},
+		"disk": &DiskAPI{},
 	}
 	api.APIs = m
 	// add more client here
