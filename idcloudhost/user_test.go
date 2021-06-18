@@ -12,7 +12,7 @@ var (
 )
 
 func TestGetUser(t *testing.T) {
-	u.Init(c, userAuthToken, loc)
+	u.Init(mockHttpClient, userAuthToken, loc)
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -29,7 +29,7 @@ func TestGetUser(t *testing.T) {
 		},
 	}
 	for _, test := range testCases {
-		c.DoFunc = func(r *http.Request) (*http.Response, error) {
+		mockHttpClient.DoFunc = func(r *http.Request) (*http.Response, error) {
 			return &http.Response{
 				Body:       io.NopCloser(strings.NewReader(test.Body)),
 				StatusCode: test.StatusCode,
