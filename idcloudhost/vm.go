@@ -46,21 +46,21 @@ type VM struct {
 }
 
 type NewVM struct {
-	Backup          bool   `json:"backup,omitempty",default:false`
-	BillingAccount  int    `json:"billing_account,omitempty",default:0`
-	Description     string `json:"description",omitempty`
-	Disks           int    `json:"disks"`
-	Username        string `json:"username"`
-	InitialPassword string `json:"password"`
-	OSName          string `json:"os_name"`
-	OSVersion       string `json:"os_version"`
-	PublicKey       string `json:"public_key,omitempty"`
-	Name            string `json:"name"`
-	Memory          int    `json:"ram"`
-	SourceReplica   string `json:"source_replica,omitempty"`
-	SourceUUID      string `json:"source_uuid,omitempty"`
-	VCPU            int    `json:"vcpu"`
-	ReservePublicIP bool   `json:"reserve_public_ip,omitempty",default:true`
+	Backup          bool   `validate:"-",default:false`
+	BillingAccount  int    `validate:"-",default:0`
+	Description     string `validate:"-"`
+	Disks           int    `validate:"required|int|min:20|max:240"`
+	Username        string `validate:"validateUsername"`
+	InitialPassword string `validate:"required|validatePassword"`
+	OSName          string `validate:"required|validateOSName"`
+	OSVersion       string `validate:"required|validateOSVersion"`
+	PublicKey       string `validate:"-"`
+	Name            string `validate:"required|validateName"`
+	Memory          int    `validate:"required|int|min:1024|max:65536"`
+	SourceReplica   string `validate:"-"`
+	SourceUUID      string `validate:"-"`
+	VCPU            int    `validate:"required|int|min:1|max:16"`
+	ReservePublicIP bool   `validate:"-",default:true`
 }
 
 func (vm *VirtualMachineAPI) Init(c HTTPClient, authToken string, location string) error {
@@ -216,4 +216,55 @@ func (vm *VirtualMachineAPI) Delete(uuid string) error {
 	}
 	defer r.Body.Close()
 	return checkError(r.StatusCode)
+}
+
+func (vm *VirtualMachineAPI) Clone(uuid string, cloneName string) error {
+	backupApiEndpoint := fmt.Sprintf("%s/%s", vm.ApiEndpoint, "clone")
+	data := url.Values{}
+	data.Set("uuid", uuid)
+	data.Set("name", cloneName)
+	req, err := http.NewRequest("POST", backupApiEndpoint,
+		strings.NewReader(data.Encode()))
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("apiKey", vm.AuthToken)
+	r, err := vm.c.Do(req)
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
+	defer r.Body.Close()
+	if err = checkError(r.StatusCode); err != nil {
+		return err
+	}
+	if err = json.NewDecoder(r.Body).Decode(&vm.VM); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (vm *VirtualMachineAPI) ToggleAutoBackup(uuid string) error {
+	backupApiEndpoint := fmt.Sprintf("%s/%s", vm.ApiEndpoint, "backup")
+	data := url.Values{}
+	data.Set("uuid", uuid)
+	req, err := http.NewRequest("POST", backupApiEndpoint,
+		strings.NewReader(data.Encode()))
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("apiKey", vm.AuthToken)
+	r, err := vm.c.Do(req)
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
+	defer r.Body.Close()
+	if err = checkError(r.StatusCode); err != nil {
+		return err
+	}
+	if err = json.NewDecoder(r.Body).Decode(&vm.VM); err != nil {
+		return err
+	}
+	return nil
 }

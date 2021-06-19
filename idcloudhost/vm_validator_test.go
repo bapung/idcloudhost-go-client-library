@@ -47,6 +47,17 @@ func TestNonValidOS(t *testing.T) {
 	}
 }
 
+func TestNonValidUsername(t *testing.T) {
+	NonValidName := []string{
+		"+startwithnonchara", "00startwithnumber", "contains@symbol", "thisusernameeeeeeeeeistoootooolooooooonnnnggggg",
+	}
+	for _, name := range NonValidName {
+		if err := validateUsername(name); err == nil {
+			t.Fatal(fmt.Errorf("validate VM name %s should return False", name))
+		}
+	}
+}
+
 func TestNonValidPassword(t *testing.T) {
 	PasswordAndErr := map[string]string{
 		"aA123":        "password length < 8 characters",

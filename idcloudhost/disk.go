@@ -112,8 +112,7 @@ func (d *DiskAPI) Create(diskSize int) error {
 	if err = checkError(r.StatusCode); err != nil {
 		return err
 	}
-	err = json.NewDecoder(r.Body).Decode(&d.Disk)
-	return err
+	return json.NewDecoder(r.Body).Decode(&d.Disk)
 }
 
 func (d *DiskAPI) Delete(diskUUID string) error {

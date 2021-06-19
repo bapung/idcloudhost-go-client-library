@@ -180,3 +180,64 @@ func TestCreateVM(t *testing.T) {
 		log.Print(testVmApi.VM)
 	}
 }
+
+func TestToggleBackup(t *testing.T) {
+	testVmApi.Init(mockHttpClient, userAuthToken, loc)
+	testCases := []struct {
+		RequestData map[string]string
+		Body        string
+		StatusCode  int
+		Error       error
+	}{
+		{
+			RequestData: map[string]string{"uuid": "this-is-valid-uuid"},
+			Body:        `{"backup":true,"billing_account":6,"created_at":"2018-02-22 11:10:17","description":"","hostname":"hostname","hypervisor_id":null,"id":7,"mac":"52:54:00:6c:6a:ac","memory":2048,"name":"Ubuntu-16-04","os_name":"ubuntu","os_version":"16.04","private_ipv4":"","status":"running","storage":[{"created_at":"2018-02-22 11:10:37.793878","id":5,"name":"sda","pool":"default2","primary":true,"replica":[],"shared":false,"size":20,"type":"block","updated_at":null,"user_id":8,"uuid":"f80b1d62-ffe4-43ef-9210-60f05445456a"}],"tags":null,"updated_at":"2018-02-22 13:48:21","user_id":8,"username":"example","uuid":"f80b1d62-ffe4-43ef-9210-60f05445456a","vcpu":2}`,
+			StatusCode:  http.StatusOK,
+			Error:       nil,
+		},
+	}
+	for _, test := range testCases {
+		mockHttpClient.DoFunc = func(r *http.Request) (*http.Response, error) {
+			return &http.Response{
+				Body:       io.NopCloser(strings.NewReader(test.Body)),
+				StatusCode: test.StatusCode,
+			}, nil
+		}
+
+		err := testVmApi.ToggleAutoBackup(test.RequestData["uuid"])
+		if err != nil && err.Error() != test.Error.Error() {
+			t.Fatalf("want %v, got %v", err, test.Error.Error())
+		}
+		log.Print(testVmApi.VM)
+	}
+}
+func TestClone(t *testing.T) {
+	testVmApi.Init(mockHttpClient, userAuthToken, loc)
+	testCases := []struct {
+		RequestData map[string]string
+		Body        string
+		StatusCode  int
+		Error       error
+	}{
+		{
+			RequestData: map[string]string{"uuid": "this-is-valid-uuid", "clone_name": "test-clone-name"},
+			Body:        `{"backup":true,"billing_account":6,"created_at":"2018-02-22 11:10:17","description":"","hostname":"hostname","hypervisor_id":null,"id":7,"mac":"52:54:00:6c:6a:ac","memory":2048,"name":"Ubuntu-16-04","os_name":"ubuntu","os_version":"16.04","private_ipv4":"","status":"running","storage":[{"created_at":"2018-02-22 11:10:37.793878","id":5,"name":"sda","pool":"default2","primary":true,"replica":[],"shared":false,"size":20,"type":"block","updated_at":null,"user_id":8,"uuid":"f80b1d62-ffe4-43ef-9210-60f05445456a"}],"tags":null,"updated_at":"2018-02-22 13:48:21","user_id":8,"username":"example","uuid":"f80b1d62-ffe4-43ef-9210-60f05445456a","vcpu":2}`,
+			StatusCode:  http.StatusOK,
+			Error:       nil,
+		},
+	}
+	for _, test := range testCases {
+		mockHttpClient.DoFunc = func(r *http.Request) (*http.Response, error) {
+			return &http.Response{
+				Body:       io.NopCloser(strings.NewReader(test.Body)),
+				StatusCode: test.StatusCode,
+			}, nil
+		}
+
+		err := testVmApi.Clone(test.RequestData["uuid"], test.RequestData["clone_name"])
+		if err != nil && err.Error() != test.Error.Error() {
+			t.Fatalf("want %v, got %v", err, test.Error.Error())
+		}
+		log.Print(testVmApi.VM)
+	}
+}

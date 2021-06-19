@@ -5,8 +5,9 @@ import (
 )
 
 type APIClient struct {
-	VM   *VirtualMachineAPI
-	Disk *DiskAPI
+	VM         *VirtualMachineAPI
+	Disk       *DiskAPI
+	FloatingIP *FloatingIPAPI
 }
 
 type HTTPClient interface {
