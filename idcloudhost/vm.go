@@ -22,26 +22,26 @@ type VirtualMachineAPI struct {
 }
 
 type VM struct {
-	Backup         bool          `json:"backup,omitempty"`
-	BillingAccount int           `json:"billing_account,omitempty"`
-	CreatedAt      string        `json:"created_at,omitempty"`
+	Backup         bool          `json:"backup"`
+	BillingAccount int           `json:"billing_account"`
+	CreatedAt      string        `json:"created_at"`
 	Description    string        `json:"description"`
-	Hostname       string        `json:"hostname,omitempty"`
-	HypervisorId   string        `json:"hypervisor_id,omitempty"`
-	Id             int           `json:"id,omitempty"`
-	MACAddress     string        `json:"mac,omitempty"`
+	Hostname       string        `json:"hostname"`
+	HypervisorId   string        `json:"hypervisor_id"`
+	Id             int           `json:"id"`
+	MACAddress     string        `json:"mac"`
 	Memory         int           `json:"ram"`
 	Name           string        `json:"name"`
 	OSName         string        `json:"os_name"`
 	OSVersion      string        `json:"os_version"`
-	PrivateIPv4    string        `json:"private_ipv4,omitempty"`
-	Status         string        `json:"status,omitempty"`
-	Storage        []DiskStorage `json:"storage,omitempty"`
-	Tags           []string      `json:"tags,omitempty"`
-	UpdatedAt      string        `json:"updated_at,omitempty"`
-	UserId         int           `json:"user_id,omitempty"`
+	PrivateIPv4    string        `json:"private_ipv4"`
+	Status         string        `json:"status"`
+	Storage        []DiskStorage `json:"storage"`
+	Tags           []string      `json:"tags"`
+	UpdatedAt      string        `json:"updated_at"`
+	UserId         int           `json:"user_id"`
 	Username       string        `json:"username"`
-	UUID           string        `json:"uuid,omitempty"`
+	UUID           string        `json:"uuid"`
 	VCPU           int           `json:"vcpu"`
 }
 
@@ -56,11 +56,11 @@ type NewVM struct {
 	OSVersion       string `json:"os_version"`
 	PublicKey       string `json:"public_key,omitempty"`
 	Name            string `json:"name"`
-	MemoryM         int    `json:"ram"`
+	Memory          int    `json:"ram"`
 	SourceReplica   string `json:"source_replica,omitempty"`
 	SourceUUID      string `json:"source_uuid,omitempty"`
 	VCPU            int    `json:"vcpu"`
-	PublicIP        string `json:"reserve_public_ip,omitempty",default:"true"`
+	ReservePublicIP bool   `json:"reserve_public_ip,omitempty",default:true`
 }
 
 func (vm *VirtualMachineAPI) Init(c HTTPClient, authToken string, location string) error {
@@ -81,37 +81,33 @@ func (vm *VirtualMachineAPI) Init(c HTTPClient, authToken string, location strin
 	return nil
 }
 
-func (vm *VirtualMachineAPI) Create(v map[string]interface{}) error {
-	if err := validateVmCreateFields(v); err != nil {
+func (vm *VirtualMachineAPI) Create(v NewVM) error {
+	if err := validateVmCreateFields(&v); err != nil {
 		return err
 	}
 	data := url.Values{}
-	data.Set("billing_account_id", strconv.Itoa(v["billing_account"].(int)))
-	data.Set("disks", strconv.Itoa(v["disks"].(int)))
-	data.Set("name", v["name"].(string))
-	data.Set("username", v["username"].(string))
-	data.Set("password", v["password"].(string))
-	data.Set("os_name", v["os_name"].(string))
-	data.Set("os_version", v["os_version"].(string))
-	data.Set("vcpu", strconv.Itoa(v["vcpu"].(int)))
-	data.Set("ram", strconv.Itoa(v["ram"].(int)))
-	if v["backup"] != nil {
-		data.Set("backup", strconv.FormatBool(v["backup"].(bool)))
+	data.Set("billing_account_id", strconv.Itoa(v.BillingAccount))
+	data.Set("disks", strconv.Itoa(v.Disks))
+	data.Set("name", v.Name)
+	data.Set("username", v.Username)
+	data.Set("password", v.InitialPassword)
+	data.Set("os_name", v.OSName)
+	data.Set("os_version", v.OSVersion)
+	data.Set("vcpu", strconv.Itoa(v.VCPU))
+	data.Set("ram", strconv.Itoa(v.Memory))
+	data.Set("backup", strconv.FormatBool(v.Backup))
+	data.Set("reserve_public_ip", strconv.FormatBool(v.ReservePublicIP))
+	if v.Description != "" {
+		data.Set("description", v.Description)
 	}
-	if v["description"] != nil {
-		data.Set("description", v["description"].(string))
+	if v.PublicKey != "" {
+		data.Set("public_key", v.PublicKey)
 	}
-	if v["public_key"] != nil {
-		data.Set("public_key", v["public_key"].(string))
+	if v.SourceReplica != "" {
+		data.Set("source_replica", v.SourceReplica)
 	}
-	if v["source_replica"] != nil {
-		data.Set("source_replica", v["source_replica"].(string))
-	}
-	if v["source_uuid "] != nil {
-		data.Set("source_uuid", v["source_uuid)"].(string))
-	}
-	if v["reserve_public_ip"] != nil {
-		data.Set("reserve_public_ip", strconv.FormatBool(v["reserve_public_ip"].(bool)))
+	if v.SourceUUID != "" {
+		data.Set("source_uuid", v.SourceUUID)
 	}
 	req, err := http.NewRequest("POST", vm.ApiEndpoint,
 		strings.NewReader(data.Encode()))
@@ -171,21 +167,24 @@ func (vm *VirtualMachineAPI) ListAll() error {
 	return json.Unmarshal(bodyByte, &vm.VMList)
 }
 
-func (vm *VirtualMachineAPI) Modify(v map[string]interface{}) error {
-	if err := validateVmModifyFields(v); err != nil {
+func (vm *VirtualMachineAPI) Modify(v VM) error {
+	if err := validateVmModifyFields(&v); err != nil {
 		return err
 	}
 	data := url.Values{}
-	data.Set("uuid", v["uuid"].(string))
-	if v["name"] != nil {
-		data.Set("name", v["name"].(string))
+	if v.Name == vm.VM.Name && v.VCPU == vm.VM.VCPU && v.Memory == vm.VM.Memory {
+		return fmt.Errorf("name or VCPU or RAM value does not changed, not updating")
 	}
-	if v["ram"] != nil {
-		data.Set("ram", strconv.Itoa(v["ram"].(int)))
+	if v.Name != vm.VM.Name {
+		data.Set("name", v.Name)
 	}
-	if v["vcpu"] != nil {
-		data.Set("vcpu", strconv.Itoa(v["vcpu"].(int)))
+	if v.Memory != vm.VM.Memory {
+		data.Set("ram", strconv.Itoa(v.Memory))
 	}
+	if v.VCPU != vm.VM.VCPU {
+		data.Set("vcpu", strconv.Itoa(v.VCPU))
+	}
+	data.Set("uuid", v.UUID)
 	req, err := http.NewRequest("PATCH", vm.ApiEndpoint,
 		strings.NewReader(data.Encode()))
 	if err != nil {

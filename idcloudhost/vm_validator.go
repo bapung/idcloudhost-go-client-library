@@ -83,69 +83,46 @@ func validateVCPU(vcpu int) error {
 	return nil
 }
 
-func validateVmCreateFields(v map[string]interface{}) error {
-	for _, field := range []string{"name", "vcpu", "ram", "disks", "username", "password", "os_name", "os_version"} {
-		if v[field] == nil {
-			return fmt.Errorf("VM validatation failed: field \"%s\" is expected", field)
-		}
-	}
-
-	name := v["name"].(string)
-	if err := validateVmName(name); err != nil {
+func validateVmCreateFields(v *NewVM) error {
+	if err := validateVmName(v.Name); err != nil {
 		return err
 	}
-
-	ram := v["ram"].(int)
-	if err := validateRAM(ram); err != nil {
+	if err := validateVCPU(v.VCPU); err != nil {
 		return err
 	}
-
-	disks := v["disks"].(int)
-	if err := validateDisks(disks); err != nil {
+	if err := validateRAM(v.Memory); err != nil {
 		return err
 	}
-
-	username := v["username"].(string)
-	if err := validateUsername(username); err != nil {
+	if err := validateDisks(v.Disks); err != nil {
 		return err
 	}
-
-	password := v["password"].(string)
-	if err := validatePassword(password); err != nil {
+	if err := validateUsername(v.Username); err != nil {
 		return err
 	}
-
-	osName := v["os_name"].(string)
-	osVersion := v["os_version"].(string)
-	if err := validateOS(osName, osVersion); err != nil {
+	if err := validatePassword(v.InitialPassword); err != nil {
+		return err
+	}
+	if err := validateOS(v.OSName, v.OSVersion); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func validateVmModifyFields(v map[string]interface{}) error {
-	if v["uuid"] == nil {
+func validateVmModifyFields(v *VM) error {
+	if v.UUID == "" {
 		return fmt.Errorf("UUID is required")
 	}
-	if v["name"] != nil {
-		name := v["name"].(string)
-		if err := validateVmName(name); err != nil {
+	if v.Name != "" {
+		if err := validateVmName(v.Name); err != nil {
 			return err
 		}
 	}
-	if v["ram"] != nil {
-		ram := v["ram"].(int)
-		if err := validateRAM(ram); err != nil {
-			return err
-		}
+	if err := validateRAM(v.Memory); err != nil {
+		return err
 	}
-	if v["vcpu"] != nil {
-		vcpu := v["vcpu"].(int)
-		if err := validateVCPU(vcpu); err != nil {
-			return err
-		}
+	if err := validateVCPU(v.VCPU); err != nil {
+		return err
 	}
-
 	return nil
 }

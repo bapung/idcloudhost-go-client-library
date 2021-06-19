@@ -60,26 +60,26 @@ func TestGetVMbyUUID(t *testing.T) {
 func TestModify(t *testing.T) {
 	testVmApi.Init(mockHttpClient, userAuthToken, loc)
 	testCases := []struct {
-		RequestData map[string]interface{}
+		RequestData VM
 		Body        string
 		StatusCode  int
 		Error       error
 	}{
 		{
-			RequestData: map[string]interface{}{
-				"uuid": "this-is-a-supposed-to-be-valid",
-				"name": "updated-vm-name",
-				"vcpu": 1,
-				"ram":  1024,
+			RequestData: VM{
+				UUID:   "this-is-a-supposed-to-be-valid",
+				Name:   "updated-vm-name",
+				VCPU:   1,
+				Memory: 1024,
 			},
 			Body:       `{"backup":true,"billing_account":6,"created_at":"2018-02-22 11:10:17","description":"","hostname":"hostname","hypervisor_id":null,"id":7,"mac":"52:54:00:6c:6a:ac","memory":2048,"name":"Ubuntu-16-04","os_name":"ubuntu","os_version":"16.04","private_ipv4":"","status":"running","storage":[{"created_at":"2018-02-22 11:10:37.793878","id":5,"name":"sda","pool":"default2","primary":true,"replica":[],"shared":false,"size":20,"type":"block","updated_at":null,"user_id":8,"uuid":"f80b1d62-ffe4-43ef-9210-60f05445456a"}],"tags":null,"updated_at":"2018-02-22 13:48:21","user_id":8,"username":"example","uuid":"f80b1d62-ffe4-43ef-9210-60f05445456a","vcpu":2}`,
 			StatusCode: http.StatusOK,
 			Error:      nil,
 		},
 		{
-			RequestData: map[string]interface{}{
-				"uuid": "this-is-a-supposed-to-be-valid",
-				"name": "__name-notvalid-vm",
+			RequestData: VM{
+				UUID: "this-is-a-supposed-to-be-valid",
+				Name: "__name-notvalid-vm",
 			},
 			Body:       ``,
 			StatusCode: http.StatusBadRequest,
@@ -134,35 +134,35 @@ func TestListAllVMs(t *testing.T) {
 func TestCreateVM(t *testing.T) {
 	testVmApi.Init(mockHttpClient, userAuthToken, loc)
 	testCases := []struct {
-		RequestData map[string]interface{}
+		RequestData NewVM
 		Body        string
 		StatusCode  int
 		Error       error
 	}{
 		{
-			RequestData: map[string]interface{}{
-				"backup":          false,
-				"name":            "testvm",
-				"os_name":         "ubuntu",
-				"os_version":      "16.04",
-				"disks":           20,
-				"vcpu":            1,
-				"ram":             1024,
-				"username":        "example",
-				"password":        "Password123",
-				"billing_account": 9999,
+			RequestData: NewVM{
+				Backup:          false,
+				Name:            "testvm",
+				OSName:          "ubuntu",
+				OSVersion:       "16.04",
+				Disks:           20,
+				VCPU:            1,
+				Memory:          1024,
+				Username:        "example",
+				InitialPassword: "Password123",
+				BillingAccount:  9999,
 			},
 			Body:       `{"backup":true,"billing_account":6,"created_at":"2018-02-22 11:10:17","description":"","hostname":"hostname","hypervisor_id":null,"id":7,"mac":"52:54:00:6c:6a:ac","memory":2048,"name":"Ubuntu-16-04","os_name":"ubuntu","os_version":"16.04","private_ipv4":"","status":"running","storage":[{"created_at":"2018-02-22 11:10:37.793878","id":5,"name":"sda","pool":"default2","primary":true,"replica":[],"shared":false,"size":20,"type":"block","updated_at":null,"user_id":8,"uuid":"f80b1d62-ffe4-43ef-9210-60f05445456a"}],"tags":null,"updated_at":"2018-02-22 13:48:21","user_id":8,"username":"example","uuid":"f80b1d62-ffe4-43ef-9210-60f05445456a","vcpu":2}`,
 			StatusCode: http.StatusOK,
 			Error:      nil,
 		},
 		{
-			RequestData: map[string]interface{}{
-				"name": "incomplete-vm",
+			RequestData: NewVM{
+				Name: "incomplete-vm",
 			},
 			Body:       ``,
 			StatusCode: http.StatusBadRequest,
-			Error:      fmt.Errorf(`VM validatation failed: field "vcpu" is expected`),
+			Error:      fmt.Errorf(`VM validatation failed: vcpu must be between 1 and 16`),
 		},
 	}
 	for _, test := range testCases {
