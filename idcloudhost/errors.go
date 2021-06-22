@@ -17,6 +17,10 @@ func UnknownError() error {
 	return errors.New("unknown error")
 }
 
+func NotFoundError() error {
+	return errors.New("resource not found")
+}
+
 func NotImplementedError() error {
 	return errors.New("not implemented")
 }
@@ -31,6 +35,8 @@ func checkError(StatusCode int) error {
 		return AuthenticationError()
 	case http.StatusBadRequest:
 		return BadRequestError()
+	case http.StatusNotFound:
+		return NotFoundError()
 	default:
 		return UnknownError()
 	}

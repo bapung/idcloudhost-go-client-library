@@ -141,7 +141,7 @@ func (d *DiskAPI) Delete(diskUUID string) error {
 	if err = json.NewDecoder(r.Body).Decode(&resp); err != nil {
 		return err
 	}
-	if resp["success"].(bool) {
+	if !resp["success"].(bool) {
 		return fmt.Errorf("unknown error")
 	}
 	return nil
@@ -151,7 +151,6 @@ func (d *DiskAPI) Modify(diskUUID string, newDiskSize int) error {
 	if d.vmUUID == "" {
 		return DiskVmNotSpecifiedError()
 	}
-	var resp map[string]interface{}
 	data := url.Values{}
 	data.Set("uuid", d.vmUUID)
 	data.Set("disk_uuid", diskUUID)
@@ -171,11 +170,8 @@ func (d *DiskAPI) Modify(diskUUID string, newDiskSize int) error {
 	if err = checkError(r.StatusCode); err != nil {
 		return err
 	}
-	if err = json.NewDecoder(r.Body).Decode(&resp); err != nil {
+	if err = json.NewDecoder(r.Body).Decode(&d.Disk); err != nil {
 		return err
-	}
-	if resp["success"].(bool) {
-		return fmt.Errorf("unknown error")
 	}
 	return nil
 }
