@@ -1,5 +1,5 @@
 # idcloudhost-go-client-library
-Golang client library for IdCloudHost
+Golang client library for [IdCloudHost](https://idcloudhost.com/)
 
 
 ## Example usages
@@ -9,16 +9,16 @@ var vmApi = idcloudhost.VirtualMachineAPI{}
 
 vmApi.Init(&http.Client{}, "definitely-legit-auth-token", "jkt01")
 var newVM = idcloudhost.NewVM{
-    Backup:          false,
-		Name:            "testvm",
-		OSName:          "ubuntu",
-		OSVersion:       "16.04",
-		Disks:           20,
-		VCPU:            1,
-		Memory:          1024,
-		Username:        "example",
-		InitialPassword: "Password123",
-		BillingAccount:  9999, //make sure it is linked to correct authToken
+  Backup:          false,
+  Name:            "testvm",
+  OSName:          "ubuntu",
+  OSVersion:       "16.04",
+  Disks:           20,
+  VCPU:            1,
+  Memory:          1024,
+  Username:        "example",
+  InitialPassword: "Password123",
+  BillingAccount:  9999, //make sure it is linked to correct authToken
 }
 err := vmApi.Create(NewVM)
 if err != nil {
