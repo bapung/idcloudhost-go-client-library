@@ -17,8 +17,9 @@ type HTTPClient interface {
 func NewClient(authToken string, loc string) (*APIClient, error) {
 	c := http.Client{}
 	var ApiClient = APIClient{
-		VM:   &VirtualMachineAPI{},
-		Disk: &DiskAPI{},
+		VM:         &VirtualMachineAPI{},
+		Disk:       &DiskAPI{},
+		FloatingIP: &FloatingIPAPI{},
 	}
 
 	ApiClient.VM.Init(&c, authToken, loc)

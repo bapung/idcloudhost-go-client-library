@@ -16,7 +16,7 @@ type FloatingIP struct {
 	Type           string `json:"type,omitempty"`
 	NetworkID      string `json:"network_id,omitempty"`
 	Name           string `json:"name"`
-	Enabled        bool   `json:"enabled,omitmepty"`
+	Enabled        bool   `json:"enabled,omitempty"`
 	CreatedAt      string `json:"created_at,omitempty"`
 	UpdatedAt      string `json:"updated_at,omitempty"`
 	AssignedTo     string `json:"assigned_to,omitempty"`
