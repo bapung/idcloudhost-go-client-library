@@ -1,4 +1,15 @@
 language: go
 go:
   - 1.16
-if: branch IN (master, dev)
+
+jobs:
+  include:
+    - stage: semantic-release
+      deploy:
+        provider: script
+        cleanup: false
+        script: bash semantic-release.sh
+        on: 
+          branch:
+            - main
+            - feature/*
