@@ -8,7 +8,7 @@ jobs:
       deploy:
         provider: script
         cleanup: false
-        script: bash semantic-release.sh
+        script: npx semantic-release --branches ["main", "feature/*"]
         on: 
           branch:
             - main
