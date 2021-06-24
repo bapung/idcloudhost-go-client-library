@@ -23,6 +23,8 @@ func NewClient(authToken string, loc string) (*APIClient, error) {
 	}
 
 	ApiClient.VM.Init(&c, authToken, loc)
+	ApiClient.Disk.Init(&c, authToken, loc)
+	ApiClient.FloatingIP.Init(&c, authToken, loc)
 
 	return &ApiClient, nil
 }

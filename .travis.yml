@@ -1,15 +1,4 @@
 language: go
 go:
   - 1.16
-
-jobs:
-  include:
-    - stage: semantic-release
-      deploy:
-        provider: script
-        cleanup: false
-        script: npx semantic-release --branches ["main", "feature/*"]
-        on: 
-          branch:
-            - main
-            - feature/*
+if: branch IN (master, dev)
