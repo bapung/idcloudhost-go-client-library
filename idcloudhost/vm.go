@@ -30,7 +30,7 @@ type VM struct {
 	HypervisorId   string        `json:"hypervisor_id"`
 	Id             int           `json:"id"`
 	MACAddress     string        `json:"mac"`
-	Memory         int           `json:"ram"`
+	Memory         int           `json:"memory"`
 	Name           string        `json:"name"`
 	OSName         string        `json:"os_name"`
 	OSVersion      string        `json:"os_version"`
