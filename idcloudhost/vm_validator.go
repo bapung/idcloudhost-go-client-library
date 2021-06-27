@@ -7,7 +7,7 @@ import (
 )
 
 var validOS = map[string][]string{
-	"ubuntu": {"16.04"},
+	"ubuntu": {"16.04", "18.04", "20.04"},
 	"debian": {"9.1"},
 	"centos": {"7.3.1611", "6.9.1611"},
 }
