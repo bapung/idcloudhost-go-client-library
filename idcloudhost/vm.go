@@ -30,7 +30,7 @@ type VM struct {
 	HypervisorId   string        `json:"hypervisor_id"`
 	Id             int           `json:"id"`
 	MACAddress     string        `json:"mac"`
-	Memory         int           `json:"ram"`
+	Memory         int           `json:"memory"`
 	Name           string        `json:"name"`
 	OSName         string        `json:"os_name"`
 	OSVersion      string        `json:"os_version"`
@@ -175,16 +175,18 @@ func (vm *VirtualMachineAPI) Modify(v VM) error {
 	if v.Name == vm.VM.Name && v.VCPU == vm.VM.VCPU && v.Memory == vm.VM.Memory {
 		return fmt.Errorf("name or VCPU or RAM value does not changed, not updating")
 	}
-	if v.Name != vm.VM.Name {
-		data.Set("name", v.Name)
-	}
-	if v.Memory != vm.VM.Memory {
+	data.Set("uuid", v.UUID)
+	data.Set("name", v.Name)
+	// workaround to idcloudhost API bug, cannot be set if none is changed.
+	if v.Memory != vm.VM.Memory || v.VCPU != vm.VM.VCPU {
 		data.Set("ram", strconv.Itoa(v.Memory))
-	}
-	if v.VCPU != vm.VM.VCPU {
 		data.Set("vcpu", strconv.Itoa(v.VCPU))
 	}
-	data.Set("uuid", v.UUID)
+	req, err := http.NewRequest("PATCH", vm.ApiEndpoint,
+		strings.NewReader(data.Encode()))
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
 	req, err := http.NewRequest("PATCH", vm.ApiEndpoint,
 		strings.NewReader(data.Encode()))
 	if err != nil {
