@@ -187,11 +187,6 @@ func (vm *VirtualMachineAPI) Modify(v VM) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	req, err := http.NewRequest("PATCH", vm.ApiEndpoint,
-		strings.NewReader(data.Encode()))
-	if err != nil {
-		return fmt.Errorf("got error %s", err.Error())
-	}
 	req.Header.Set("apiKey", vm.AuthToken)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r, err := vm.c.Do(req)
