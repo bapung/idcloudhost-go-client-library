@@ -142,7 +142,7 @@ func (ip *FloatingIPAPI) Delete(IPAddress string) error {
 func (ip *FloatingIPAPI) Assign(IPAddress string, targetVMUUID string) error {
 	var url = fmt.Sprintf("%s/%s/assign", ip.ApiEndpoint, IPAddress)
 	var payloadJSON = []byte(
-		fmt.Sprintf("{ \"vm_uuid\": %s }", targetVMUUID))
+		fmt.Sprintf("{ \"vm_uuid\": \"%s\" }", targetVMUUID))
 	req, err := http.NewRequest("POST", url,
 		bytes.NewBuffer(payloadJSON))
 	if err != nil {
