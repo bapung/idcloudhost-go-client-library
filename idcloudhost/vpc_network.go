@@ -73,3 +73,57 @@ func (vpc *VPCNetworkAPI) Create(name string, billingAccountId int) error {
 	}
 	return json.NewDecoder(r.Body).Decode(&vpc.VPCNetwork)
 }
+
+func (vpc *VPCNetworkAPI) Get(UUID string) error {
+	var url = fmt.Sprintf("%s/%s", vpc.ApiEndpoint, UUID)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
+	req.Header.Set("apiKey", vpc.AuthToken)
+	r, err := vpc.c.Do(req)
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
+	defer r.Body.Close()
+	if err = checkError(r.StatusCode); err != nil {
+		return err
+	}
+	return json.NewDecoder(r.Body).Decode(&vpc.VPCNetwork)
+}
+
+func (vpc *VPCNetworkAPI) SetDefault(UUID string) error {
+	var url = fmt.Sprintf("%s/%s/default", vpc.ApiEndpoint, UUID)
+	req, err := http.NewRequest("PUT", url, nil)
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
+	req.Header.Set("apiKey", vpc.AuthToken)
+	r, err := vpc.c.Do(req)
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
+	defer r.Body.Close()
+	if err = checkError(r.StatusCode); err != nil {
+		return err
+	}
+	return json.NewDecoder(r.Body).Decode(&vpc.VPCNetwork)
+}
+
+func (vpc *VPCNetworkAPI) Delete(UUID string) error {
+	var url = fmt.Sprintf("%s/%s", vpc.ApiEndpoint, UUID)
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
+	req.Header.Set("apiKey", vpc.AuthToken)
+	r, err := vpc.c.Do(req)
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
+	defer r.Body.Close()
+	if err = checkError(r.StatusCode); err != nil {
+		return err
+	}
+	return json.NewDecoder(r.Body).Decode(&vpc.VPCNetwork)
+}
