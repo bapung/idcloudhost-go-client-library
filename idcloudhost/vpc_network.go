@@ -1,7 +1,6 @@
 package idcloudhost
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -35,7 +34,7 @@ func (vpc *VPCNetworkAPI) Init(c HTTPClient, authToken string, location string) 
 	vpc.AuthToken = authToken
 	vpc.Location = location
 	vpc.ApiEndpoint = fmt.Sprintf(
-		"https://api.idcloudhost.com/v1/%s/network/networks",
+		"https://api.idcloudhost.com/v1/%s/network/network",
 		vpc.Location,
 	)
 	r, err := http.Get(vpc.ApiEndpoint)
@@ -48,20 +47,30 @@ func (vpc *VPCNetworkAPI) Init(c HTTPClient, authToken string, location string) 
 	return nil
 }
 
-func (vpc *VPCNetworkAPI) Create(name string, billingAccountId int) error {
-	var payloadJSON, err = json.Marshal(
-		&VPCNetwork{
-			Name: name,
-		})
-	if err != nil {
-		return err
-	}
-	req, err := http.NewRequest("POST", vpc.ApiEndpoint,
-		bytes.NewBuffer(payloadJSON))
+func (vpc *VPCNetworkAPI) List() error {
+	url := fmt.Sprintf("%ss", vpc.ApiEndpoint)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.Header.Set("apiKey", vpc.AuthToken)
+	r, err := vpc.c.Do(req)
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
+	defer r.Body.Close()
+	if err = checkError(r.StatusCode); err != nil {
+		return err
+	}
+	return json.NewDecoder(r.Body).Decode(&vpc.VPCNetworkList)
+}
+
+func (vpc *VPCNetworkAPI) Get(UUID string) error {
+	var url = fmt.Sprintf("%s/%s", vpc.ApiEndpoint, UUID)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
 	req.Header.Set("apiKey", vpc.AuthToken)
 	r, err := vpc.c.Do(req)
 	if err != nil {
@@ -74,12 +83,13 @@ func (vpc *VPCNetworkAPI) Create(name string, billingAccountId int) error {
 	return json.NewDecoder(r.Body).Decode(&vpc.VPCNetwork)
 }
 
-func (vpc *VPCNetworkAPI) Get(UUID string) error {
-	var url = fmt.Sprintf("%s/%s", vpc.ApiEndpoint, UUID)
-	req, err := http.NewRequest("GET", url, nil)
+func (vpc *VPCNetworkAPI) Create(name string, billingAccountId int) error {
+	url := fmt.Sprintf("%s?name=%s", vpc.ApiEndpoint, name)
+	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	req.Header.Set("apiKey", vpc.AuthToken)
 	r, err := vpc.c.Do(req)
 	if err != nil {
@@ -125,5 +135,5 @@ func (vpc *VPCNetworkAPI) Delete(UUID string) error {
 	if err = checkError(r.StatusCode); err != nil {
 		return err
 	}
-	return json.NewDecoder(r.Body).Decode(&vpc.VPCNetwork)
+	return nil
 }
