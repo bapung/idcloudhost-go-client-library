@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 type VPCNetworkAPI struct {
@@ -83,9 +85,11 @@ func (vpc *VPCNetworkAPI) Get(UUID string) error {
 	return json.NewDecoder(r.Body).Decode(&vpc.VPCNetwork)
 }
 
-func (vpc *VPCNetworkAPI) Create(name string, billingAccountId int) error {
-	url := fmt.Sprintf("%s?name=%s", vpc.ApiEndpoint, name)
-	req, err := http.NewRequest("POST", url, nil)
+func (vpc *VPCNetworkAPI) Create(name string) error {
+	data := url.Values{}
+	data.Set("name", name)
+	req, err := http.NewRequest("POST", vpc.ApiEndpoint,
+		strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
