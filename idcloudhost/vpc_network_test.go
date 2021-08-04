@@ -102,3 +102,45 @@ func TestCreateNetwork(t *testing.T) {
 		}
 	}
 }
+
+func TestDeleteNetwork(t *testing.T) {
+	testNetworkAPI.Init(mockHttpClient, userAuthToken, loc)
+	testCases := []struct {
+		UUID       string
+		Body       string
+		StatusCode int
+		Error      error
+	}{
+		{
+			UUID:       "test-non-default-no-resource-network",
+			Body:       ``,
+			StatusCode: http.StatusOK,
+			Error:      nil,
+		},
+		{
+			UUID:       "test-non-exist-network",
+			Body:       `{"timestamp":1628085172112,"status":500,"error":"Internal Server Error","message":"Network uuid is invalid.","path":"/v1/network/82bf2dd0-c9ab-429a-a6a5-8e17f56caeaf"}`,
+			StatusCode: http.StatusInternalServerError,
+			Error:      UnknownError(),
+		},
+		{
+			UUID:       "test-default-network",
+			Body:       `{"timestamp":1628085453108,"status":500,"error":"Internal Server Error","message":"Default network cannot be deleted.","path":"/v1/network/cf99ed55-608f-438a-a371-32a2f5813cbc"}`,
+			StatusCode: http.StatusInternalServerError,
+			Error:      UnknownError(),
+		},
+	}
+	for _, test := range testCases {
+		mockHttpClient.DoFunc = func(r *http.Request) (*http.Response, error) {
+			return &http.Response{
+				Body:       io.NopCloser(strings.NewReader(test.Body)),
+				StatusCode: test.StatusCode,
+			}, nil
+		}
+
+		err := testNetworkAPI.Delete(test.UUID)
+		if err != nil && err.Error() != test.Error.Error() {
+			t.Fatalf("want %v, got %v", err, test.Error.Error())
+		}
+	}
+}
