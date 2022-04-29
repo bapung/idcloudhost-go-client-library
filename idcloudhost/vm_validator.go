@@ -7,9 +7,16 @@ import (
 )
 
 var validOS = map[string][]string{
-	"ubuntu": {"16.04", "18.04", "20.04"},
-	"debian": {"9.1"},
-	"centos": {"7.3.1611", "6.9.1611"},
+	"almalinux":  {"8.4"},
+	"debian":     {"9.1", "10.2"},
+	"centos":     {"7.3.1611", "6.9.1611"},
+	"cloudlinux": {"7.9", "8.4"},
+	"fedora":     {"34"},
+	"opensuse":   {"15.3"},
+	"rocky":      {"8.4"},
+	"rhel":       {"server_7.9", "server_8.4"},
+	"ubuntu":     {"16.04", "18.04", "20.04", "21.04", "22.04-lts"},
+	"windows":    {"2016"},
 }
 
 func validateVmName(name string) error {
