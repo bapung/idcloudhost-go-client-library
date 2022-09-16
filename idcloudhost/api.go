@@ -5,9 +5,10 @@ import (
 )
 
 type APIClient struct {
-	VM         *VirtualMachineAPI
-	Disk       *DiskAPI
-	FloatingIP *FloatingIPAPI
+	VM         		*VirtualMachineAPI
+	Disk       		*DiskAPI
+	FloatingIP 		*FloatingIPAPI
+	LoadBalancer 	*LoadBalancerAPI
 }
 
 type HTTPClient interface {
@@ -20,11 +21,13 @@ func NewClient(authToken string, loc string) (*APIClient, error) {
 		VM:         &VirtualMachineAPI{},
 		Disk:       &DiskAPI{},
 		FloatingIP: &FloatingIPAPI{},
+		LoadBalancer: &LoadBalancerAPI{},
 	}
 
 	ApiClient.VM.Init(&c, authToken, loc)
 	ApiClient.Disk.Init(&c, authToken, loc)
 	ApiClient.FloatingIP.Init(&c, authToken, loc)
+	ApiClient.LoadBalancer.Init(&c, authToken, loc)
 
 	return &ApiClient, nil
 }
