@@ -150,7 +150,7 @@ func TestAddForwardingTarget(t *testing.T) {
 			}, nil
 		}
 		err := testLoadBalancerApi.AddForwardingTarget(
-			test.RequestData["lbUUID"],
+			test.RequestData["LBUUID"],
 			test.RequestData["TargetUUID"],
 			test.RequestData["TargetType"],
 		)
@@ -159,3 +159,38 @@ func TestAddForwardingTarget(t *testing.T) {
 		}
 	}
 }
+
+func TestDeleteForwardingRule(t *testing.T) {
+	testLoadBalancerApi.Init(mockHttpClient, userAuthToken, loc)
+	testCases := []struct {
+		RequestData		map[string]string
+		Body			string
+		StatusCode		int
+		Error			error
+	}{
+		{
+			RequestData:	map[string]string{
+				"LBUUID": 		"438ac62f-e97b-4ef0-8940-507b9e94af43",
+				"RuleUUID": 	"145cc106-e067-419a-85fd-333ded30f169",
+			},
+			StatusCode: 	http.StatusOK,
+			Error:			nil,
+		},
+	}
+
+	for _, test := range testCases {
+		mockHttpClient.DoFunc = func(r *http.Request) (*http.Response, error) {
+			return &http.Response{
+				StatusCode: test.StatusCode,
+			}, nil
+		}
+		err := testLoadBalancerApi.DeleteForwardingRule(
+			test.RequestData["LBUUID"],
+			test.RequestData["RuleUUID"],
+		)
+		if err != nil && err.Error() != test.Error.Error() {
+			t.Fatalf("want %v, got %v", err, test.Error.Error())
+		}
+	}
+}
+

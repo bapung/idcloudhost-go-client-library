@@ -165,7 +165,7 @@ func (lb *LoadBalancerAPI) AddForwardingTarget(
 	return nil
 }
 
-func (lb *LoadBalancerAPI) UnlinkForwardingTarget(LBUUID string, TargetUUID string) error {
+func (lb *LoadBalancerAPI) DeleteForwardingTarget(LBUUID string, TargetUUID string) error {
 	url := fmt.Sprintf("%s/%s/targets/%s", lb.ApiEndpoint, LBUUID, TargetUUID)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -184,4 +184,50 @@ func (lb *LoadBalancerAPI) UnlinkForwardingTarget(LBUUID string, TargetUUID stri
 	return checkError(r.StatusCode)
 }
 
+func (lb *LoadBalancerAPI) AddForwardingRule(
+		LBUUID string, SourcePort int, TargetPort int) error {
+	url := fmt.Sprintf("%s/%s/forwarding_rules", lb.ApiEndpoint, LBUUID)
+	target := ForwardingRule{
+		SourcePort: SourcePort,
+		TargetPort: TargetPort,
+	}
+	targetJSON, err := json.Marshal(&target)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(targetJSON))
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("apiKey", lb.AuthToken)
+	r, err := lb.c.Do(req)
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
+	if err = checkError(r.StatusCode); err != nil {
+		return err
+	}
+	if err = json.NewDecoder(r.Body).Decode(&target); err != nil {
+		return err
+	}
+	defer r.Body.Close()
+	return nil
+}
+
+func (lb *LoadBalancerAPI) DeleteForwardingRule(LBUUID string, RuleUUID string) error {
+	url := fmt.Sprintf("%s/%s/forwarding_rules/%s", lb.ApiEndpoint, LBUUID, RuleUUID)
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
+	req.Header.Set("apiKey", lb.AuthToken)
+	req.Header.Set("Content-Type", "application/json")
+	r, err := lb.c.Do(req)
+	if err != nil {
+		return fmt.Errorf("got error %s", err.Error())
+	}
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+	
+	return checkError(r.StatusCode)
+}
 
