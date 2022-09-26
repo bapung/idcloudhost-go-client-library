@@ -1,58 +1,57 @@
 package idcloudhost
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"log"
 	"io/ioutil"
-	"bytes"
+	"log"
+	"net/http"
 )
 
 type LoadBalancerAPI struct {
-	c           		HTTPClient
-	AuthToken   		string
-	Location    		string
-	ApiEndpoint 		string
-	LoadBalancer		*LoadBalancer
-	LoadBalancerList    *[]LoadBalancer
+	c                HTTPClient
+	AuthToken        string
+	Location         string
+	ApiEndpoint      string
+	LoadBalancer     *LoadBalancer
+	LoadBalancerList *[]LoadBalancer
 }
 
-
-type LoadBalancer struct  {
-	UUID 				string 				`json:"uuid"`
-	NetworkUUID 		string 				`json:"network_uuid"`
-	DisplayName			string				`json:"display_name,omitempty"`
-	UserUID 			int 				`json:"user_id"`
-	BillingAccount 		int 				`json:"billing_account_id"`
-	CreatedAt			string  			`json:"created_at"`
-	UpdatedAt			string  			`json:"updated_at"`
-	IsDeleted			bool    			`json:"is_deleted"`
-	PrivateIPv4     	string  			`json:"private_address"`
-	ReservePublicIP 	bool				`json:"reserve_public_ip,omitempty"`
-	ForwardingRules 	[]ForwardingRule 	`json:"forwarding_rules"`
-	Targets				[]ForwardingTarget 	`json:"targets"`
+type LoadBalancer struct {
+	UUID            string             `json:"uuid"`
+	NetworkUUID     string             `json:"network_uuid"`
+	DisplayName     string             `json:"display_name,omitempty"`
+	UserUID         int                `json:"user_id"`
+	BillingAccount  int                `json:"billing_account_id"`
+	CreatedAt       string             `json:"created_at"`
+	UpdatedAt       string             `json:"updated_at"`
+	IsDeleted       bool               `json:"is_deleted"`
+	PrivateIPv4     string             `json:"private_address"`
+	ReservePublicIP bool               `json:"reserve_public_ip,omitempty"`
+	ForwardingRules []ForwardingRule   `json:"forwarding_rules"`
+	Targets         []ForwardingTarget `json:"targets"`
 }
 
 type ForwardingRule struct {
-	CreatedAt			string   				`json:"created_at,omitempty"`
-	UUID	    		string   				`json:"uuid,omitempty"`
-	SourcePort 			int		 				`json:"source_port"`
-	TargetPort			int		   				`json:"target_port"`
-	Protocol			string 	 				`json:"protocol,omitempty"`
-	Setting				ForwardingRuleSetting 	`json:"settings,omitempty"`
+	CreatedAt  string                `json:"created_at,omitempty"`
+	UUID       string                `json:"uuid,omitempty"`
+	SourcePort int                   `json:"source_port"`
+	TargetPort int                   `json:"target_port"`
+	Protocol   string                `json:"protocol,omitempty"`
+	Setting    ForwardingRuleSetting `json:"settings,omitempty"`
 }
 
 type ForwardingRuleSetting struct {
-	ConnectionLimit		int 	`json:"connection_limit"`
-	SessionPersistence  string 	`json:"session_persistence"`
+	ConnectionLimit    int    `json:"connection_limit"`
+	SessionPersistence string `json:"session_persistence"`
 }
 
 type ForwardingTarget struct {
-	CreatedAt			string   `json:"created_at,omitempty"`
-	TargetUUID	    	string   `json:"target_uuid"`
-	TargetType			string   `json:"target_type"`
-	TargetIPAddress 	string	 `json:"target_ip_address,omitempty"`
+	CreatedAt       string `json:"created_at,omitempty"`
+	TargetUUID      string `json:"target_uuid"`
+	TargetType      string `json:"target_type"`
+	TargetIPAddress string `json:"target_ip_address,omitempty"`
 }
 
 func (lb *LoadBalancerAPI) Init(c HTTPClient, authToken string, location string) error {
@@ -99,6 +98,9 @@ func (lb *LoadBalancerAPI) ListAll(isAll bool) error {
 func (lb *LoadBalancerAPI) Create(isAll bool, newLB *LoadBalancer) error {
 	url := fmt.Sprintf("%s?all=%t", lb.ApiEndpoint, isAll)
 	newLbJSON, err := json.Marshal(newLB)
+	if err != nil {
+		return fmt.Errorf("got error during json marshal: %s", err.Error())
+	}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(newLbJSON))
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
@@ -133,18 +135,21 @@ func (lb *LoadBalancerAPI) Delete(UUID string) error {
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
-	
+
 	return checkError(r.StatusCode)
 }
 
 func (lb *LoadBalancerAPI) AddForwardingTarget(
-		LBUUID string, TargetUUID string, TargetType string) error {
+	LBUUID string, TargetUUID string, TargetType string) error {
 	url := fmt.Sprintf("%s/%s/targets", lb.ApiEndpoint, LBUUID)
 	target := ForwardingTarget{
 		TargetUUID: TargetUUID,
 		TargetType: TargetType,
 	}
 	targetJSON, err := json.Marshal(&target)
+	if err != nil {
+		return fmt.Errorf("got error during json marshal: %s", err.Error())
+	}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(targetJSON))
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
@@ -180,18 +185,21 @@ func (lb *LoadBalancerAPI) DeleteForwardingTarget(LBUUID string, TargetUUID stri
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
-	
+
 	return checkError(r.StatusCode)
 }
 
 func (lb *LoadBalancerAPI) AddForwardingRule(
-		LBUUID string, SourcePort int, TargetPort int) error {
+	LBUUID string, SourcePort int, TargetPort int) error {
 	url := fmt.Sprintf("%s/%s/forwarding_rules", lb.ApiEndpoint, LBUUID)
 	target := ForwardingRule{
 		SourcePort: SourcePort,
 		TargetPort: TargetPort,
 	}
 	targetJSON, err := json.Marshal(&target)
+	if err != nil {
+		return fmt.Errorf("got error during json marshal: %s", err.Error())
+	}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(targetJSON))
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
@@ -227,7 +235,6 @@ func (lb *LoadBalancerAPI) DeleteForwardingRule(LBUUID string, RuleUUID string) 
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
-	
+
 	return checkError(r.StatusCode)
 }
-

@@ -1,13 +1,12 @@
 package idcloudhost
 
 import (
-	"testing"
-	"net/http"
 	"io"
-	"strings"
 	"log"
+	"net/http"
+	"strings"
+	"testing"
 	//"github.com/stretchr/testify/assert"
-
 )
 
 var testLoadBalancerApi LoadBalancerAPI
@@ -15,14 +14,14 @@ var testLoadBalancerApi LoadBalancerAPI
 func TestListAllLB(t *testing.T) {
 	testLoadBalancerApi.Init(mockHttpClient, userAuthToken, loc)
 	testCases := []struct {
-		Body		string
-		StatusCode	int
-		Error		error
+		Body       string
+		StatusCode int
+		Error      error
 	}{
 		{
-			Body: 		`[{"uuid":"438ac62f-e97b-4ef0-8940-507b9e94af43","network_uuid":"438ac62f-e97b-4ef0-8940-507b9e94af43","user_id":268,"billing_account_id":130157,"created_at":"2022-07-12 14:21:06","updated_at":"2022-07-12 14:21:06","is_deleted":false,"private_address":"10.112.231.192","forwarding_rules":[{"uuid":"b3f28feb-c91e-4601-a6b6-267fa98dc121","protocol":"TCP","created_at":"2022-07-12 14:21:06","source_port":8080,"target_port":8080,"settings":{"connection_limit":10000,"session_persistence":"SOURCE_IP"}}],"targets":[{"created_at":"2022-07-12 14:21:06","target_uuid":"145cc106-e067-419a-85fd-333ded30f169","target_type":"vm","target_ip_address":"10.61.10.2"}]}]`,
+			Body:       `[{"uuid":"438ac62f-e97b-4ef0-8940-507b9e94af43","network_uuid":"438ac62f-e97b-4ef0-8940-507b9e94af43","user_id":268,"billing_account_id":130157,"created_at":"2022-07-12 14:21:06","updated_at":"2022-07-12 14:21:06","is_deleted":false,"private_address":"10.112.231.192","forwarding_rules":[{"uuid":"b3f28feb-c91e-4601-a6b6-267fa98dc121","protocol":"TCP","created_at":"2022-07-12 14:21:06","source_port":8080,"target_port":8080,"settings":{"connection_limit":10000,"session_persistence":"SOURCE_IP"}}],"targets":[{"created_at":"2022-07-12 14:21:06","target_uuid":"145cc106-e067-419a-85fd-333ded30f169","target_type":"vm","target_ip_address":"10.61.10.2"}]}]`,
 			StatusCode: http.StatusOK,
-			Error:		nil,
+			Error:      nil,
 		},
 	}
 
@@ -43,24 +42,24 @@ func TestListAllLB(t *testing.T) {
 func TestCreateLBB(t *testing.T) {
 	testLoadBalancerApi.Init(mockHttpClient, userAuthToken, loc)
 	testCases := []struct {
-		RequestData		LoadBalancer
-		Body			string
-		StatusCode		int
-		Error 			error
+		RequestData LoadBalancer
+		Body        string
+		StatusCode  int
+		Error       error
 	}{
 		{
-			RequestData:	LoadBalancer{
-				DisplayName:		"my LB",
-				BillingAccount: 	130157,
-				NetworkUUID: 		"438ac62f-e97b-4ef0-8940-507b9e94af43",
-				ReservePublicIP: 	true,
-				ForwardingRules:	[]ForwardingRule{
+			RequestData: LoadBalancer{
+				DisplayName:     "my LB",
+				BillingAccount:  130157,
+				NetworkUUID:     "438ac62f-e97b-4ef0-8940-507b9e94af43",
+				ReservePublicIP: true,
+				ForwardingRules: []ForwardingRule{
 					{
 						SourcePort: 8080,
 						TargetPort: 80,
 					},
 				},
-				Targets:			[]ForwardingTarget{
+				Targets: []ForwardingTarget{
 					{
 						TargetUUID: "145cc106-e067-419a-85fd-333ded30f169",
 						TargetType: "vm",
@@ -70,11 +69,10 @@ func TestCreateLBB(t *testing.T) {
 						TargetType: "vm",
 					},
 				},
-
 			},
-			Body:		 	`{"uuid":"438ac62f-e97b-4ef0-8940-507b9e94af43","display_name":"my LB","network_uuid":"438ac62f-e97b-4ef0-8940-507b9e94af43","user_id":268,"billing_account_id":130157,"created_at":"2022-07-12 14:21:06","updated_at":"2022-07-12 14:21:06","is_deleted":false,"private_address":"10.112.231.192","forwarding_rules":[{"uuid":"b3f28feb-c91e-4601-a6b6-267fa98dc121","protocol":"TCP","created_at":"2022-07-12 14:21:06","source_port":8080,"target_port":8080,"settings":{"connection_limit":10000,"session_persistence":"SOURCE_IP"}}],"targets":[{"created_at":"2022-07-12 14:21:06","target_uuid":"145cc106-e067-419a-85fd-333ded30f169","target_type":"vm","target_ip_address":"10.61.10.2"}]}`,
-			StatusCode: 	http.StatusOK,
-			Error: 			nil,
+			Body:       `{"uuid":"438ac62f-e97b-4ef0-8940-507b9e94af43","display_name":"my LB","network_uuid":"438ac62f-e97b-4ef0-8940-507b9e94af43","user_id":268,"billing_account_id":130157,"created_at":"2022-07-12 14:21:06","updated_at":"2022-07-12 14:21:06","is_deleted":false,"private_address":"10.112.231.192","forwarding_rules":[{"uuid":"b3f28feb-c91e-4601-a6b6-267fa98dc121","protocol":"TCP","created_at":"2022-07-12 14:21:06","source_port":8080,"target_port":8080,"settings":{"connection_limit":10000,"session_persistence":"SOURCE_IP"}}],"targets":[{"created_at":"2022-07-12 14:21:06","target_uuid":"145cc106-e067-419a-85fd-333ded30f169","target_type":"vm","target_ip_address":"10.61.10.2"}]}`,
+			StatusCode: http.StatusOK,
+			Error:      nil,
 		},
 	}
 
@@ -97,14 +95,14 @@ func TestCreateLBB(t *testing.T) {
 func TestDeleteLB(t *testing.T) {
 	testLoadBalancerApi.Init(mockHttpClient, userAuthToken, loc)
 	testCases := []struct {
-		LBUUID		string
-		StatusCode	int
-		Error		error
+		LBUUID     string
+		StatusCode int
+		Error      error
 	}{
 		{
-			LBUUID:		"438ac62f-e97b-4ef0-8940-507b9e94af43",
+			LBUUID:     "438ac62f-e97b-4ef0-8940-507b9e94af43",
 			StatusCode: http.StatusOK,
-			Error:		nil,
+			Error:      nil,
 		},
 	}
 
@@ -112,7 +110,7 @@ func TestDeleteLB(t *testing.T) {
 		mockHttpClient.DoFunc = func(r *http.Request) (*http.Response, error) {
 			return &http.Response{
 				StatusCode: test.StatusCode,
-				Body:	nil,
+				Body:       nil,
 			}, nil
 		}
 		err := testLoadBalancerApi.Delete(test.LBUUID)
@@ -125,20 +123,20 @@ func TestDeleteLB(t *testing.T) {
 func TestAddForwardingTarget(t *testing.T) {
 	testLoadBalancerApi.Init(mockHttpClient, userAuthToken, loc)
 	testCases := []struct {
-		RequestData		map[string]string
-		Body			string
-		StatusCode		int
-		Error			error
+		RequestData map[string]string
+		Body        string
+		StatusCode  int
+		Error       error
 	}{
 		{
-			RequestData:	map[string]string{
-				"LBUUID": 		"438ac62f-e97b-4ef0-8940-507b9e94af43",
-				"TargetUUID": 	"145cc106-e067-419a-85fd-333ded30f169",
-				"TargetType": 	"vm",
+			RequestData: map[string]string{
+				"LBUUID":     "438ac62f-e97b-4ef0-8940-507b9e94af43",
+				"TargetUUID": "145cc106-e067-419a-85fd-333ded30f169",
+				"TargetType": "vm",
 			},
-			Body:			`{"created_at":"2022-07-12 14:21:06","target_uuid":"145cc106-e067-419a-85fd-333ded30f169","target_type":"vm","target_ip_address":"10.61.10.2"}`,
-			StatusCode: 	http.StatusOK,
-			Error:			nil,
+			Body:       `{"created_at":"2022-07-12 14:21:06","target_uuid":"145cc106-e067-419a-85fd-333ded30f169","target_type":"vm","target_ip_address":"10.61.10.2"}`,
+			StatusCode: http.StatusOK,
+			Error:      nil,
 		},
 	}
 
@@ -146,7 +144,7 @@ func TestAddForwardingTarget(t *testing.T) {
 		mockHttpClient.DoFunc = func(r *http.Request) (*http.Response, error) {
 			return &http.Response{
 				StatusCode: test.StatusCode,
-				Body:		io.NopCloser(strings.NewReader(test.Body)),
+				Body:       io.NopCloser(strings.NewReader(test.Body)),
 			}, nil
 		}
 		err := testLoadBalancerApi.AddForwardingTarget(
@@ -163,18 +161,18 @@ func TestAddForwardingTarget(t *testing.T) {
 func TestDeleteForwardingRule(t *testing.T) {
 	testLoadBalancerApi.Init(mockHttpClient, userAuthToken, loc)
 	testCases := []struct {
-		RequestData		map[string]string
-		Body			string
-		StatusCode		int
-		Error			error
+		RequestData map[string]string
+		Body        string
+		StatusCode  int
+		Error       error
 	}{
 		{
-			RequestData:	map[string]string{
-				"LBUUID": 		"438ac62f-e97b-4ef0-8940-507b9e94af43",
-				"RuleUUID": 	"145cc106-e067-419a-85fd-333ded30f169",
+			RequestData: map[string]string{
+				"LBUUID":   "438ac62f-e97b-4ef0-8940-507b9e94af43",
+				"RuleUUID": "145cc106-e067-419a-85fd-333ded30f169",
 			},
-			StatusCode: 	http.StatusOK,
-			Error:			nil,
+			StatusCode: http.StatusOK,
+			Error:      nil,
 		},
 	}
 
@@ -193,4 +191,3 @@ func TestDeleteForwardingRule(t *testing.T) {
 		}
 	}
 }
-
