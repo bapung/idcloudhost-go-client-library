@@ -1,4 +1,4 @@
-package idcloudhost
+package floatingip
 
 import (
 	"bytes"
@@ -7,6 +7,10 @@ import (
 	"log"
 	"net/http"
 )
+
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
 
 type FloatingIP struct {
 	ID             int    `json:"id,omitempty"`

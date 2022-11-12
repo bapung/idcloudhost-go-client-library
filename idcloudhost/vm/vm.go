@@ -1,4 +1,4 @@
-package idcloudhost
+package vm
 
 import (
 	"encoding/json"
@@ -10,6 +10,10 @@ import (
 	"strconv"
 	"strings"
 )
+
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
 
 type VirtualMachineAPI struct {
 	c              HTTPClient

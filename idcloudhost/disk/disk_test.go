@@ -1,4 +1,4 @@
-package idcloudhost
+package disk
 
 import (
 	"io"
@@ -9,7 +9,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var testDiskApi DiskAPI
+type HTTPClientMock struct {
+	DoFunc func(*http.Request) (*http.Response, error)
+}
+
+func (H HTTPClientMock) Do(r *http.Request) (*http.Response, error) {
+	return H.DoFunc(r)
+}
+
+const userAuthToken = "xxxxx"
+
+var (
+	mockHttpClient = &HTTPClientMock{}
+	loc            = "jkt01"
+	testDiskApi    = DiskAPI{}
+)
 
 func TestGetDiskByUUID(t *testing.T) {
 	testDiskApi.Init(mockHttpClient, userAuthToken, loc)

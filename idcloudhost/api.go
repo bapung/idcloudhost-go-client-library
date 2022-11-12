@@ -2,12 +2,16 @@ package idcloudhost
 
 import (
 	"net/http"
+
+	"github.com/bapung/idcloudhost-go-client-library/disk"
+	"github.com/bapung/idcloudhost-go-client-library/floatingip"
+	"github.com/bapung/idcloudhost-go-client-library/vm"
 )
 
 type APIClient struct {
-	VM         *VirtualMachineAPI
-	Disk       *DiskAPI
-	FloatingIP *FloatingIPAPI
+	VM         *vm.VirtualMachineAPI
+	Disk       *disk.DiskAPI
+	FloatingIP *floatingip.FloatingIPAPI
 }
 
 type HTTPClient interface {
@@ -17,9 +21,9 @@ type HTTPClient interface {
 func NewClient(authToken string, loc string) (*APIClient, error) {
 	c := http.Client{}
 	var ApiClient = APIClient{
-		VM:         &VirtualMachineAPI{},
-		Disk:       &DiskAPI{},
-		FloatingIP: &FloatingIPAPI{},
+		VM:         &vm.VirtualMachineAPI{},
+		Disk:       &disk.DiskAPI{},
+		FloatingIP: &floatingip.FloatingIPAPI{},
 	}
 
 	ApiClient.VM.Init(&c, authToken, loc)

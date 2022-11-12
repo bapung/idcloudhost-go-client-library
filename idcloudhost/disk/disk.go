@@ -1,4 +1,4 @@
-package idcloudhost
+package disk
 
 import (
 	"encoding/json"
@@ -9,6 +9,10 @@ import (
 	"strconv"
 	"strings"
 )
+
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
 
 type DiskAPI struct {
 	c           HTTPClient
@@ -109,7 +113,7 @@ func (d *DiskAPI) Create(diskSize int) error {
 	}
 	defer r.Body.Close()
 
-	if err = checkError(r.StatusCode); err != nil {
+	if err = errHandler.checkError(r.StatusCode); err != nil {
 		return err
 	}
 	return json.NewDecoder(r.Body).Decode(&d.Disk)
@@ -135,7 +139,7 @@ func (d *DiskAPI) Delete(diskUUID string) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if err = checkError(r.StatusCode); err != nil {
+	if err = errHandler.checkError(r.StatusCode); err != nil {
 		return err
 	}
 	if err = json.NewDecoder(r.Body).Decode(&resp); err != nil {
@@ -167,7 +171,7 @@ func (d *DiskAPI) Modify(diskUUID string, newDiskSize int) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if err = checkError(r.StatusCode); err != nil {
+	if err = errHandler.checkError(r.StatusCode); err != nil {
 		return err
 	}
 	if err = json.NewDecoder(r.Body).Decode(&d.Disk); err != nil {

@@ -1,4 +1,4 @@
-package idcloudhost
+package vm
 
 import (
 	"fmt"
