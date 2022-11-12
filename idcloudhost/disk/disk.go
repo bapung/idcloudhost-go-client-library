@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"errors"
 )
 
 type HTTPClient interface {
@@ -69,17 +70,12 @@ func (d *DiskAPI) Bind(vmUUID string) {
 	d.vmUUID = vmUUID
 }
 
-func (d *DiskAPI) Get(uuid string) error {
+func (d *DiskAPI) Get(uuid string, vmDiskList *[]DiskStorage) error {
 	if d.vmUUID == "" {
 		return DiskVmNotSpecifiedError()
 	}
-	var v VirtualMachineAPI
-	v.Init(d.c, d.AuthToken, d.Location)
-	err := v.Get(d.vmUUID)
-	if err != nil {
-		return err
-	}
-	d.DiskList = &v.VM.Storage
+
+	d.DiskList = vmDiskList
 
 	for _, disk := range *(d.DiskList) {
 		if disk.UUID == uuid {
@@ -113,8 +109,8 @@ func (d *DiskAPI) Create(diskSize int) error {
 	}
 	defer r.Body.Close()
 
-	if err = errHandler.checkError(r.StatusCode); err != nil {
-		return err
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
 	}
 	return json.NewDecoder(r.Body).Decode(&d.Disk)
 }
@@ -139,8 +135,8 @@ func (d *DiskAPI) Delete(diskUUID string) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if err = errHandler.checkError(r.StatusCode); err != nil {
-		return err
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
 	}
 	if err = json.NewDecoder(r.Body).Decode(&resp); err != nil {
 		return err
@@ -171,8 +167,8 @@ func (d *DiskAPI) Modify(diskUUID string, newDiskSize int) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if err = errHandler.checkError(r.StatusCode); err != nil {
-		return err
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
 	}
 	if err = json.NewDecoder(r.Body).Decode(&d.Disk); err != nil {
 		return err

@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"errors"
+	"github.com/bapung/idcloudhost-go-client-library/idcloudhost/disk"
 )
 
 type HTTPClient interface {
@@ -26,27 +28,27 @@ type VirtualMachineAPI struct {
 }
 
 type VM struct {
-	Backup         bool          `json:"backup"`
-	BillingAccount int           `json:"billing_account"`
-	CreatedAt      string        `json:"created_at"`
-	Description    string        `json:"description"`
-	Hostname       string        `json:"hostname"`
-	HypervisorId   string        `json:"hypervisor_id"`
-	Id             int           `json:"id"`
-	MACAddress     string        `json:"mac"`
-	Memory         int           `json:"memory"`
-	Name           string        `json:"name"`
-	OSName         string        `json:"os_name"`
-	OSVersion      string        `json:"os_version"`
-	PrivateIPv4    string        `json:"private_ipv4"`
-	Status         string        `json:"status"`
-	Storage        []DiskStorage `json:"storage"`
-	Tags           []string      `json:"tags"`
-	UpdatedAt      string        `json:"updated_at"`
-	UserId         int           `json:"user_id"`
-	Username       string        `json:"username"`
-	UUID           string        `json:"uuid"`
-	VCPU           int           `json:"vcpu"`
+	Backup         bool          		`json:"backup"`
+	BillingAccount int           		`json:"billing_account"`
+	CreatedAt      string        		`json:"created_at"`
+	Description    string        		`json:"description"`
+	Hostname       string        		`json:"hostname"`
+	HypervisorId   string        		`json:"hypervisor_id"`
+	Id             int           		`json:"id"`
+	MACAddress     string        		`json:"mac"`
+	Memory         int           		`json:"memory"`
+	Name           string        		`json:"name"`
+	OSName         string        		`json:"os_name"`
+	OSVersion      string        		`json:"os_version"`
+	PrivateIPv4    string        		`json:"private_ipv4"`
+	Status         string        		`json:"status"`
+	Storage        []disk.DiskStorage 	`json:"storage"`
+	Tags           []string      		`json:"tags"`
+	UpdatedAt      string        		`json:"updated_at"`
+	UserId         int           		`json:"user_id"`
+	Username       string        		`json:"username"`
+	UUID           string        		`json:"uuid"`
+	VCPU           int           		`json:"vcpu"`
 }
 
 type NewVM struct {
@@ -125,8 +127,8 @@ func (vm *VirtualMachineAPI) Create(v NewVM) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if err = checkError(r.StatusCode); err != nil {
-		return err
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
 	}
 	return json.NewDecoder(r.Body).Decode(&vm.VM)
 }
@@ -143,8 +145,8 @@ func (vm *VirtualMachineAPI) Get(uuid string) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if err = checkError(r.StatusCode); err != nil {
-		return err
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
 	}
 	return json.NewDecoder(r.Body).Decode(&vm.VM)
 }
@@ -161,8 +163,8 @@ func (vm *VirtualMachineAPI) ListAll() error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if err = checkError(r.StatusCode); err != nil {
-		return err
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
 	}
 	bodyByte, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -198,7 +200,10 @@ func (vm *VirtualMachineAPI) Modify(v VM) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	return checkError(r.StatusCode)
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
+	}
+	return nil
 }
 
 func (vm *VirtualMachineAPI) Delete(uuid string) error {
@@ -216,7 +221,10 @@ func (vm *VirtualMachineAPI) Delete(uuid string) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	return checkError(r.StatusCode)
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
+	}
+	return nil
 }
 
 func (vm *VirtualMachineAPI) Clone(uuid string, cloneName string) error {
@@ -236,8 +244,8 @@ func (vm *VirtualMachineAPI) Clone(uuid string, cloneName string) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if err = checkError(r.StatusCode); err != nil {
-		return err
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
 	}
 	if err = json.NewDecoder(r.Body).Decode(&vm.VM); err != nil {
 		return err
@@ -261,8 +269,8 @@ func (vm *VirtualMachineAPI) ToggleAutoBackup(uuid string) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if err = checkError(r.StatusCode); err != nil {
-		return err
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
 	}
 	if err = json.NewDecoder(r.Body).Decode(&vm.VM); err != nil {
 		return err

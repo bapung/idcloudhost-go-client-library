@@ -7,10 +7,20 @@ import (
 	"testing"
 )
 
+
+type HTTPClientMock struct {
+	DoFunc func(*http.Request) (*http.Response, error)
+}
+
+func (H HTTPClientMock) Do(r *http.Request) (*http.Response, error) {
+	return H.DoFunc(r)
+}
+
 var (
 	mockHttpClient = &HTTPClientMock{}
 	u              = UserAPI{}
 	loc            = "jkt01"
+	userAuthToken  = "xxx"
 )
 
 func TestGetUser(t *testing.T) {
