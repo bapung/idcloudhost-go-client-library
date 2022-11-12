@@ -1,3 +1,3 @@
-module github.com/bapung/idcloudhost-go-client-library/idcoudhost
+module github.com/bapung/idcloudhost-go-client-library
 
 go 1.19
