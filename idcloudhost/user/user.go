@@ -1,10 +1,14 @@
-package idcloudhost
+package user
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 )
+
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
 
 type UserAPI struct {
 	c              HTTPClient

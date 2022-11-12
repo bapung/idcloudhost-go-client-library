@@ -1,4 +1,4 @@
-package idcloudhost
+package user
 
 import (
 	"io"
@@ -8,7 +8,9 @@ import (
 )
 
 var (
-	u = UserAPI{}
+	mockHttpClient = &HTTPClientMock{}
+	u              = UserAPI{}
+	loc            = "jkt01"
 )
 
 func TestGetUser(t *testing.T) {
