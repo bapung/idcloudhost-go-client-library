@@ -1,4 +1,4 @@
-package idcloudhost
+package api
 
 import (
 	"net/http"
