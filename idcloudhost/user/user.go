@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"errors"
 )
 
 type HTTPClient interface {
@@ -57,8 +58,8 @@ func (u *UserAPI) Get(uuid string) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if err = checkError(r.StatusCode); err != nil {
-		return err
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
 	}
 	return json.NewDecoder(r.Body).Decode(&u.User)
 }
@@ -73,4 +74,8 @@ func (u *UserAPI) Modify() error {
 
 func (u *UserAPI) Delete() error {
 	return NotImplementedError()
+}
+
+func NotImplementedError() error {
+	return errors.New("Method not Implemented")
 }

@@ -3,9 +3,9 @@ package idcloudhost
 import (
 	"net/http"
 
-	"github.com/bapung/idcloudhost-go-client-library/disk"
-	"github.com/bapung/idcloudhost-go-client-library/floatingip"
-	"github.com/bapung/idcloudhost-go-client-library/vm"
+	"github.com/bapung/idcloudhost-go-client-library/idcloudhost/disk"
+	"github.com/bapung/idcloudhost-go-client-library/idcloudhost/floatingip"
+	"github.com/bapung/idcloudhost-go-client-library/idcloudhost/vm"
 )
 
 type APIClient struct {

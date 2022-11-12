@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"errors"
 )
 
 type HTTPClient interface {
@@ -73,8 +74,8 @@ func (ip *FloatingIPAPI) Create(name string, billingAccountId int) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if err = checkError(r.StatusCode); err != nil {
-		return err
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
 	}
 	return json.NewDecoder(r.Body).Decode(&ip.FloatingIP)
 }
@@ -91,8 +92,8 @@ func (ip *FloatingIPAPI) Get(IPAddress string) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if err = checkError(r.StatusCode); err != nil {
-		return err
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
 	}
 	return json.NewDecoder(r.Body).Decode(&ip.FloatingIP)
 }
@@ -119,8 +120,8 @@ func (ip *FloatingIPAPI) Update(name string, billingAccountId int, targetIPAddre
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if err = checkError(r.StatusCode); err != nil {
-		return err
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
 	}
 	return json.NewDecoder(r.Body).Decode(&ip.FloatingIP)
 }
@@ -137,8 +138,8 @@ func (ip *FloatingIPAPI) Delete(IPAddress string) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if err = checkError(r.StatusCode); err != nil {
-		return err
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
 	}
 	return nil
 }
@@ -159,8 +160,8 @@ func (ip *FloatingIPAPI) Assign(IPAddress string, targetVMUUID string) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if err = checkError(r.StatusCode); err != nil {
-		return err
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
 	}
 	return json.NewDecoder(r.Body).Decode(&ip.FloatingIP)
 }
@@ -178,8 +179,8 @@ func (ip *FloatingIPAPI) Unassign(IPAddress string) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	defer r.Body.Close()
-	if err = checkError(r.StatusCode); err != nil {
-		return err
+	if r.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%v",r.StatusCode))
 	}
 	return json.NewDecoder(r.Body).Decode(&ip.FloatingIP)
 }
