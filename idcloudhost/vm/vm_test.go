@@ -17,13 +17,18 @@ func (H HTTPClientMock) Do(r *http.Request) (*http.Response, error) {
 	return H.DoFunc(r)
 }
 
-const userAuthToken = "xxxxx"
+const userAuthToken = "h6jyi7lvaqniRk5JhX3FoCExzmh4pkIh"
 
 var (
 	mockHttpClient = &HTTPClientMock{}
 	testVmApi      = VirtualMachineAPI{}
 	loc            = "jkt01"
 )
+
+func TestRiil(t *testing.T) {
+
+	testVmApi.Init(,HTTPuserAuthToken, loc)
+}
 
 func TestGetVMbyUUID(t *testing.T) {
 	testVmApi.Init(mockHttpClient, userAuthToken, loc)
