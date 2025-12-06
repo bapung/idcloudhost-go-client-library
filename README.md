@@ -1,9 +1,11 @@
 # idcloudhost-go-client-library
+
 Golang client library for [IdCloudHost](https://idcloudhost.com/)
 
-
 ## Example usages
+
 ### Create VM
+
 ```go
 var vmApi = idcloudhost.VirtualMachineAPI{}
 
@@ -26,7 +28,9 @@ if err != nil {
 }
 
 ```
+
 ### Attach Disk to VM
+
 ```go
 var (
   diskApi = idcloudhost.DiskAPI{}
@@ -36,11 +40,12 @@ var (
 diskApi.Bind("existing-vm-in-interest")
 err := diskApi.Create(sizeGb)
 if err != nil {
-  //handle error 
+  //handle error
 }
 ```
 
 ### Create and attach Floating IP
+
 ```go
 var (
   ipApi = idcloudhost.FloatingIPAPI{}
@@ -50,15 +55,50 @@ var (
 ipApi.Init(&http.Client{}, "definitely-legit-auth-token", "jkt01")
 err := ipApi.Create("desired name", billingAcc)
 if err != nil {
-  //handle error 
+  //handle error
 }
 myIP := ipApi.FloatingIP.Address
 err = ipApi.Assign(myIP, "valid-existing-vm-uuid")
 if err != nil {
-  //handle error 
+  //handle error
 }
 ```
 
-### Disclaimer
-For now, I am developing this client library as prerequisites to my other project: [Terraform Provider for idCloudHost](https://github.com/bapung/terraform-provider-idcloudhost). The reason is I want to codify my project in IdCloudHost (afaik the cheapest Cloud VPS in Indonesia right now, which fit my needs). 
-This is a fun project and not guaranted for stability, if you found bugs or need to add feature feel free to create issue or PR.
+## Testing
+
+This library includes both unit tests and integration tests.
+
+### Unit Tests
+
+Unit tests use mocked HTTP clients and don't require API credentials:
+
+```bash
+go test ./...
+```
+
+### Integration Tests
+
+Integration tests create real resources in your IDCloudHost account. Set up environment variables first:
+
+```bash
+export IDCLOUDHOST_API_KEY="your-api-key"
+export IDCLOUDHOST_LOCATION="jkt01"
+export IDCLOUDHOST_BILLING_ACCOUNT="1234567890"
+```
+
+Run integration tests:
+
+```bash
+# Run all integration tests
+go test -tags=integration ./...
+
+# Or use the convenience script
+./run_integration_tests.sh
+
+# Run specific resource tests
+./run_integration_tests.sh firewall
+./run_integration_tests.sh floatingip
+./run_integration_tests.sh network
+./run_integration_tests.sh loadbalancer
+./run_integration_tests.sh objectstorage
+```

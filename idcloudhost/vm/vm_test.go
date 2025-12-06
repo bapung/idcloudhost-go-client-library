@@ -26,8 +26,7 @@ var (
 )
 
 func TestRiil(t *testing.T) {
-
-	testVmApi.Init(,HTTPuserAuthToken, loc)
+	testVmApi.Init(mockHttpClient, userAuthToken, loc)
 }
 
 func TestGetVMbyUUID(t *testing.T) {
