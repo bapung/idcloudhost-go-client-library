@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"errors"
 )
 
 type HTTPClient interface {
@@ -73,9 +72,13 @@ func (ip *FloatingIPAPI) Create(name string, billingAccountId int) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v",r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return json.NewDecoder(r.Body).Decode(&ip.FloatingIP)
 }
@@ -91,9 +94,13 @@ func (ip *FloatingIPAPI) Get(IPAddress string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v",r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return json.NewDecoder(r.Body).Decode(&ip.FloatingIP)
 }
@@ -119,9 +126,13 @@ func (ip *FloatingIPAPI) Update(name string, billingAccountId int, targetIPAddre
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v",r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return json.NewDecoder(r.Body).Decode(&ip.FloatingIP)
 }
@@ -137,9 +148,13 @@ func (ip *FloatingIPAPI) Delete(IPAddress string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v",r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return nil
 }
@@ -159,9 +174,13 @@ func (ip *FloatingIPAPI) Assign(IPAddress string, targetVMUUID string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v",r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return json.NewDecoder(r.Body).Decode(&ip.FloatingIP)
 }
@@ -178,9 +197,13 @@ func (ip *FloatingIPAPI) Unassign(IPAddress string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v",r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return json.NewDecoder(r.Body).Decode(&ip.FloatingIP)
 }

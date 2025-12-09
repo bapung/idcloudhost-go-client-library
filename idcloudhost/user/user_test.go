@@ -7,7 +7,6 @@ import (
 	"testing"
 )
 
-
 type HTTPClientMock struct {
 	DoFunc func(*http.Request) (*http.Response, error)
 }
@@ -24,7 +23,9 @@ var (
 )
 
 func TestGetUser(t *testing.T) {
-	u.Init(mockHttpClient, userAuthToken, loc)
+	if err := u.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize user api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string

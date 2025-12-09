@@ -17,7 +17,7 @@ func (H HTTPClientMock) Do(r *http.Request) (*http.Response, error) {
 	return H.DoFunc(r)
 }
 
-const userAuthToken = "xxxxx"
+const userAuthToken = "h6jyi7lvaqniRk5JhX3FoCExzmh4pkIh"
 
 var (
 	mockHttpClient = &HTTPClientMock{}
@@ -25,8 +25,16 @@ var (
 	loc            = "jkt01"
 )
 
+func TestRiil(t *testing.T) {
+	if err := testVmApi.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize vm api: %v", err)
+	}
+}
+
 func TestGetVMbyUUID(t *testing.T) {
-	testVmApi.Init(mockHttpClient, userAuthToken, loc)
+	if err := testVmApi.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize vm api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -58,7 +66,9 @@ func TestGetVMbyUUID(t *testing.T) {
 	}
 }
 func TestModify(t *testing.T) {
-	testVmApi.Init(mockHttpClient, userAuthToken, loc)
+	if err := testVmApi.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize vm api: %v", err)
+	}
 	testCases := []struct {
 		RequestData VM
 		Body        string
@@ -102,7 +112,9 @@ func TestModify(t *testing.T) {
 }
 
 func TestListAllVMs(t *testing.T) {
-	testVmApi.Init(mockHttpClient, userAuthToken, loc)
+	if err := testVmApi.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize vm api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -132,7 +144,9 @@ func TestListAllVMs(t *testing.T) {
 	}
 }
 func TestCreateVM(t *testing.T) {
-	testVmApi.Init(mockHttpClient, userAuthToken, loc)
+	if err := testVmApi.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize vm api: %v", err)
+	}
 	testCases := []struct {
 		RequestData NewVM
 		Body        string
@@ -182,7 +196,9 @@ func TestCreateVM(t *testing.T) {
 }
 
 func TestToggleBackup(t *testing.T) {
-	testVmApi.Init(mockHttpClient, userAuthToken, loc)
+	if err := testVmApi.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize vm api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]string
 		Body        string
@@ -212,7 +228,9 @@ func TestToggleBackup(t *testing.T) {
 	}
 }
 func TestClone(t *testing.T) {
-	testVmApi.Init(mockHttpClient, userAuthToken, loc)
+	if err := testVmApi.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize vm api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]string
 		Body        string
