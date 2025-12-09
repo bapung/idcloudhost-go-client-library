@@ -345,7 +345,9 @@ func TestFirewallAPI_DeleteFirewall(t *testing.T) {
 func TestFirewallAPI_AssignFirewall(t *testing.T) {
 	mockClient := setupMockClient("{}")
 	firewallAPI := FirewallAPI{}
-	firewallAPI.Init(mockClient, "test-token", "test-location")
+	if err := firewallAPI.Init(mockClient, "test-token", "test-location"); err != nil {
+		t.Fatalf("failed to initialize firewall api: %v", err)
+	}
 
 	// Store the original DoFunc to verify it was called with the correct URL and body
 	originalDoFunc := mockClient.DoFunc
@@ -396,7 +398,9 @@ func TestFirewallAPI_AssignFirewall(t *testing.T) {
 func TestFirewallAPI_UnassignFirewall(t *testing.T) {
 	mockClient := setupMockClient("{}")
 	firewallAPI := FirewallAPI{}
-	firewallAPI.Init(mockClient, "test-token", "test-location")
+	if err := firewallAPI.Init(mockClient, "test-token", "test-location"); err != nil {
+		t.Fatalf("failed to initialize firewall api: %v", err)
+	}
 
 	// Store the original DoFunc to verify it was called with the correct URL and body
 	originalDoFunc := mockClient.DoFunc
