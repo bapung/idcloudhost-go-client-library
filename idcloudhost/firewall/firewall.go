@@ -49,10 +49,19 @@ func (f *FirewallAPI) Init(c HTTPClient, authToken string, location string) erro
 		"https://api.idcloudhost.com/v1/%s/network/firewalls",
 		f.Location,
 	)
-	r, err := http.Get(f.ApiEndpoint)
+	req, err := http.NewRequest("GET", f.ApiEndpoint, nil)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("failed to create request: %v", err)
 	}
+	r, err := f.c.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to verify endpoint: %v", err)
+	}
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode == http.StatusNotFound {
 		return fmt.Errorf("location: %s not found", f.Location)
 	}

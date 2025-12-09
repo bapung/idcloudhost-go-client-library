@@ -62,10 +62,19 @@ func (s *ObjectStorageAPI) Init(c HTTPClient, authToken string, location string)
 	s.AuthToken = authToken
 	s.ApiEndpoint = "https://api.idcloudhost.com/v1/object-storage"
 
-	r, err := http.Get(s.ApiEndpoint)
+	req, err := http.NewRequest("GET", s.ApiEndpoint, nil)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("failed to create request: %v", err)
 	}
+	r, err := s.c.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to verify endpoint: %v", err)
+	}
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode == http.StatusNotFound {
 		return fmt.Errorf("object-storage API endpoint not available")
 	}

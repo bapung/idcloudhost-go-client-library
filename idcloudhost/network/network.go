@@ -40,10 +40,19 @@ func (n *NetworkAPI) Init(c HTTPClient, authToken string, location string) error
 		"https://api.idcloudhost.com/v1/%s/network/private_networks",
 		n.Location,
 	)
-	r, err := http.Get(n.ApiEndpoint)
+	req, err := http.NewRequest("GET", n.ApiEndpoint, nil)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("failed to create request: %v", err)
 	}
+	r, err := n.c.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to verify endpoint: %v", err)
+	}
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode == http.StatusNotFound {
 		return fmt.Errorf("location: %s not found", n.Location)
 	}
