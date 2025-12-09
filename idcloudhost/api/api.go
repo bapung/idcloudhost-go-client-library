@@ -41,14 +41,30 @@ func NewClient(authToken string, loc string) (*APIClient, error) {
 		LoadBalancer:  &loadbalancer.LoadBalancerAPI{},
 	}
 
-	ApiClient.VM.Init(&c, authToken, loc)
-	ApiClient.Disk.Init(&c, authToken, loc)
-	ApiClient.FloatingIP.Init(&c, authToken, loc)
-	ApiClient.User.Init(&c, authToken, loc)
-	ApiClient.Network.Init(&c, authToken, loc)
-	ApiClient.Firewall.Init(&c, authToken, loc)
-	ApiClient.ObjectStorage.Init(&c, authToken, loc)
-	ApiClient.LoadBalancer.Init(&c, authToken, loc)
+	if err := ApiClient.VM.Init(&c, authToken, loc); err != nil {
+		return nil, err
+	}
+	if err := ApiClient.Disk.Init(&c, authToken, loc); err != nil {
+		return nil, err
+	}
+	if err := ApiClient.FloatingIP.Init(&c, authToken, loc); err != nil {
+		return nil, err
+	}
+	if err := ApiClient.User.Init(&c, authToken, loc); err != nil {
+		return nil, err
+	}
+	if err := ApiClient.Network.Init(&c, authToken, loc); err != nil {
+		return nil, err
+	}
+	if err := ApiClient.Firewall.Init(&c, authToken, loc); err != nil {
+		return nil, err
+	}
+	if err := ApiClient.ObjectStorage.Init(&c, authToken, loc); err != nil {
+		return nil, err
+	}
+	if err := ApiClient.LoadBalancer.Init(&c, authToken, loc); err != nil {
+		return nil, err
+	}
 
 	return &ApiClient, nil
 }

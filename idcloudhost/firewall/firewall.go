@@ -3,7 +3,6 @@ package firewall
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -71,9 +70,13 @@ func (f *FirewallAPI) ListFirewalls() error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return json.NewDecoder(r.Body).Decode(&f.Firewalls)
 }
@@ -100,10 +103,14 @@ func (f *FirewallAPI) CreateFirewall(firewall *Firewall) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return json.NewDecoder(r.Body).Decode(&f.Firewall)
@@ -132,10 +139,14 @@ func (f *FirewallAPI) UpdateFirewall(uuid string, firewall *Firewall) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return json.NewDecoder(r.Body).Decode(&f.Firewall)
@@ -153,10 +164,14 @@ func (f *FirewallAPI) DeleteFirewall(uuid string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return nil
@@ -188,10 +203,14 @@ func (f *FirewallAPI) AssignFirewall(firewallUUID string, vmUUID string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return nil
@@ -223,10 +242,14 @@ func (f *FirewallAPI) UnassignFirewall(firewallUUID string, vmUUID string) error
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return nil
@@ -246,10 +269,8 @@ func validateFirewallRules(rules []FirewallRule) error {
 		}
 
 		// Check port range format for tcp/udp
-		if rule.Protocol != "icmp" && rule.PortRange != "" {
-			// TODO: add more detailed port range validation if needed
-			// For now, we'll just check that it's not empty for non-ICMP protocols
-		}
+		// TODO: add more detailed port range validation if needed
+		// For now, we accept any non-empty port range for non-ICMP protocols
 	}
 	return nil
 }

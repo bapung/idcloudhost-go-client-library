@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -77,9 +78,13 @@ func (u *UserAPI) Get(uuid string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return json.NewDecoder(r.Body).Decode(&u.User)
 }
@@ -105,10 +110,14 @@ func (u *UserAPI) ModifyProfile(profileInfo ProfileInfo) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return json.NewDecoder(r.Body).Decode(&u.User)
@@ -125,9 +134,13 @@ func (u *UserAPI) ListSSHKeys() error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return json.NewDecoder(r.Body).Decode(&u.SSHKeys)
 }
@@ -156,10 +169,14 @@ func (u *UserAPI) CreateSSHKey(name string, publicKey string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return json.NewDecoder(r.Body).Decode(&u.SSHKey)
@@ -190,10 +207,14 @@ func (u *UserAPI) UpdateSSHKeyName(keyID int, name string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return json.NewDecoder(r.Body).Decode(&u.SSHKey)
@@ -211,15 +232,19 @@ func (u *UserAPI) DeleteSSHKey(keyID int) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return nil
 }
 
 func NotImplementedError() error {
-	return errors.New("Method not Implemented")
+	return errors.New("method not implemented")
 }

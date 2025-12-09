@@ -26,7 +26,9 @@ var (
 )
 
 func TestGetS3Info(t *testing.T) {
-	testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize objectstorage api: %v", err)
+	}
 	testCases := []struct {
 		Body       string
 		StatusCode int
@@ -60,7 +62,9 @@ func TestGetS3Info(t *testing.T) {
 }
 
 func TestCreateBucket(t *testing.T) {
-	testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize objectstorage api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -101,7 +105,9 @@ func TestCreateBucket(t *testing.T) {
 }
 
 func TestModifyBucket(t *testing.T) {
-	testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize objectstorage api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -139,7 +145,9 @@ func TestModifyBucket(t *testing.T) {
 }
 
 func TestDeleteBucket(t *testing.T) {
-	testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize objectstorage api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -171,7 +179,9 @@ func TestDeleteBucket(t *testing.T) {
 }
 
 func TestGetBucket(t *testing.T) {
-	testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize objectstorage api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -207,7 +217,9 @@ func TestGetBucket(t *testing.T) {
 }
 
 func TestListBuckets(t *testing.T) {
-	testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize objectstorage api: %v", err)
+	}
 	testCases := []struct {
 		Body       string
 		StatusCode int
@@ -240,7 +252,9 @@ func TestListBuckets(t *testing.T) {
 }
 
 func TestGetKeys(t *testing.T) {
-	testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize objectstorage api: %v", err)
+	}
 	testCases := []struct {
 		Body       string
 		StatusCode int
@@ -272,7 +286,9 @@ func TestGetKeys(t *testing.T) {
 }
 
 func TestGenerateKey(t *testing.T) {
-	testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize objectstorage api: %v", err)
+	}
 	testCases := []struct {
 		Body       string
 		StatusCode int
@@ -304,7 +320,9 @@ func TestGenerateKey(t *testing.T) {
 }
 
 func TestDeleteKey(t *testing.T) {
-	testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testObjectStorageAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize objectstorage api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string

@@ -26,7 +26,9 @@ var (
 )
 
 func TestListLoadBalancers(t *testing.T) {
-	testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize loadbalancer api: %v", err)
+	}
 	testCases := []struct {
 		Body       string
 		StatusCode int
@@ -58,7 +60,9 @@ func TestListLoadBalancers(t *testing.T) {
 }
 
 func TestGetLoadBalancer(t *testing.T) {
-	testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize loadbalancer api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -96,7 +100,9 @@ func TestGetLoadBalancer(t *testing.T) {
 }
 
 func TestCreateLoadBalancer(t *testing.T) {
-	testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize loadbalancer api: %v", err)
+	}
 	testCases := []struct {
 		RequestData *LoadBalancer
 		Body        string
@@ -141,8 +147,10 @@ func TestCreateLoadBalancer(t *testing.T) {
 	}
 }
 
-func TestRenameLoadBalancer(t *testing.T) {
-	testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc)
+func TestModifyLoadBalancer(t *testing.T) {
+	if err := testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize loadbalancer api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -180,7 +188,9 @@ func TestRenameLoadBalancer(t *testing.T) {
 }
 
 func TestDeleteLoadBalancer(t *testing.T) {
-	testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize loadbalancer api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -212,7 +222,9 @@ func TestDeleteLoadBalancer(t *testing.T) {
 }
 
 func TestAddTarget(t *testing.T) {
-	testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize loadbalancer api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -252,7 +264,9 @@ func TestAddTarget(t *testing.T) {
 }
 
 func TestRemoveTarget(t *testing.T) {
-	testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize loadbalancer api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -286,7 +300,9 @@ func TestRemoveTarget(t *testing.T) {
 }
 
 func TestAddRule(t *testing.T) {
-	testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize loadbalancer api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -331,7 +347,9 @@ func TestAddRule(t *testing.T) {
 }
 
 func TestRemoveRule(t *testing.T) {
-	testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize loadbalancer api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -365,7 +383,9 @@ func TestRemoveRule(t *testing.T) {
 }
 
 func TestChangeBillingAccount(t *testing.T) {
-	testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testLoadBalancerAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize loadbalancer api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string

@@ -2,9 +2,8 @@ package vm
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -56,8 +55,8 @@ type VM struct {
 }
 
 type NewVM struct {
-	Backup          bool   `validate:"-",default:false`
-	BillingAccount  int    `validate:"-",default:0`
+	Backup          bool   `validate:"-" default:"false"`
+	BillingAccount  int    `validate:"-" default:"0"`
 	Description     string `validate:"-"`
 	Disks           int    `validate:"required|int|min:20|max:240"`
 	Username        string `validate:"validateUsername"`
@@ -70,7 +69,7 @@ type NewVM struct {
 	SourceReplica   string `validate:"-"`
 	SourceUUID      string `validate:"-"`
 	VCPU            int    `validate:"required|int|min:1|max:16"`
-	ReservePublicIP bool   `validate:"-",default:true`
+	ReservePublicIP bool   `validate:"-" default:"true"`
 }
 
 type ResourcePool struct {
@@ -148,9 +147,13 @@ func (vm *VirtualMachineAPI) Create(v NewVM) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return json.NewDecoder(r.Body).Decode(&vm.VM)
 }
@@ -166,9 +169,13 @@ func (vm *VirtualMachineAPI) Get(uuid string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return json.NewDecoder(r.Body).Decode(&vm.VM)
 }
@@ -184,15 +191,19 @@ func (vm *VirtualMachineAPI) ListAll() error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
-	bodyByte, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	return json.Unmarshal(bodyByte, &vm.VMList)
+	return json.Unmarshal(body, &vm.VMList)
 }
 
 func (vm *VirtualMachineAPI) Modify(v VM) error {
@@ -221,9 +232,13 @@ func (vm *VirtualMachineAPI) Modify(v VM) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return nil
 }
@@ -242,9 +257,13 @@ func (vm *VirtualMachineAPI) Delete(uuid string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return nil
 }
@@ -265,9 +284,13 @@ func (vm *VirtualMachineAPI) Clone(uuid string, cloneName string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	if err = json.NewDecoder(r.Body).Decode(&vm.VM); err != nil {
 		return err
@@ -290,9 +313,13 @@ func (vm *VirtualMachineAPI) ToggleAutoBackup(uuid string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	if err = json.NewDecoder(r.Body).Decode(&vm.VM); err != nil {
 		return err
@@ -315,9 +342,13 @@ func (vm *VirtualMachineAPI) ReleasePublicIP(uuid string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	if err = json.NewDecoder(r.Body).Decode(&vm.VM); err != nil {
 		return err
@@ -340,9 +371,13 @@ func (vm *VirtualMachineAPI) ReservePublicIP(uuid string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	if err = json.NewDecoder(r.Body).Decode(&vm.VM); err != nil {
 		return err
@@ -366,9 +401,13 @@ func (vm *VirtualMachineAPI) RebuildFromReplica(uuid string, replicaUUID string)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	if err = json.NewDecoder(r.Body).Decode(&vm.VM); err != nil {
 		return err
@@ -392,9 +431,13 @@ func (vm *VirtualMachineAPI) DeleteReplica(uuid string, replicaUUID string) erro
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return nil
 }
@@ -411,9 +454,13 @@ func (vm *VirtualMachineAPI) ListReplicas(uuid string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return json.NewDecoder(r.Body).Decode(&vm.ReplicaList)
 }
@@ -434,9 +481,13 @@ func (vm *VirtualMachineAPI) CreateReplica(uuid string, name string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	if err = json.NewDecoder(r.Body).Decode(&vm.Replica); err != nil {
 		return err
@@ -459,9 +510,13 @@ func (vm *VirtualMachineAPI) StartVM(uuid string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	if err = json.NewDecoder(r.Body).Decode(&vm.VM); err != nil {
 		return err
@@ -484,9 +539,13 @@ func (vm *VirtualMachineAPI) StopVM(uuid string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	if err = json.NewDecoder(r.Body).Decode(&vm.VM); err != nil {
 		return err
@@ -510,9 +569,13 @@ func (vm *VirtualMachineAPI) BootMedia(uuid string, mediaType string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	if err = json.NewDecoder(r.Body).Decode(&vm.VM); err != nil {
 		return err
@@ -536,9 +599,13 @@ func (vm *VirtualMachineAPI) ChangePassword(uuid string, newPassword string) err
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return nil
 }
@@ -562,9 +629,13 @@ func (vm *VirtualMachineAPI) Reinstall(uuid string, osName string, osVersion str
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	if err = json.NewDecoder(r.Body).Decode(&vm.VM); err != nil {
 		return err
@@ -583,9 +654,13 @@ func (vm *VirtualMachineAPI) ListResourcePools() error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return json.NewDecoder(r.Body).Decode(&vm.ResourcePools)
 }

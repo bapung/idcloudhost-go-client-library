@@ -2,7 +2,7 @@ package network
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -21,7 +21,7 @@ func setupMockClient(responseBody string) *MockClient {
 		DoFunc: func(req *http.Request) (*http.Response, error) {
 			return &http.Response{
 				StatusCode: 200,
-				Body:       ioutil.NopCloser(bytes.NewBufferString(responseBody)),
+				Body:       io.NopCloser(strings.NewReader(responseBody)),
 				Header:     make(http.Header),
 			}, nil
 		},
@@ -43,7 +43,9 @@ func TestNetworkAPI_GetNetwork(t *testing.T) {
 
 	mockClient := setupMockClient(networkResponse)
 	networkAPI := NetworkAPI{}
-	networkAPI.Init(mockClient, "test-token", "test-location")
+	if err := networkAPI.Init(mockClient, "test-token", "test-location"); err != nil {
+		t.Fatalf("failed to initialize network api: %v", err)
+	}
 
 	err := networkAPI.GetNetwork("test-uuid")
 	if err != nil {
@@ -90,7 +92,9 @@ func TestNetworkAPI_ListNetworks(t *testing.T) {
 
 	mockClient := setupMockClient(networksResponse)
 	networkAPI := NetworkAPI{}
-	networkAPI.Init(mockClient, "test-token", "test-location")
+	if err := networkAPI.Init(mockClient, "test-token", "test-location"); err != nil {
+		t.Fatalf("failed to initialize network api: %v", err)
+	}
 
 	err := networkAPI.ListNetworks()
 	if err != nil {
@@ -125,7 +129,9 @@ func TestNetworkAPI_CreateDefaultNetwork(t *testing.T) {
 
 	mockClient := setupMockClient(networkResponse)
 	networkAPI := NetworkAPI{}
-	networkAPI.Init(mockClient, "test-token", "test-location")
+	if err := networkAPI.Init(mockClient, "test-token", "test-location"); err != nil {
+		t.Fatalf("failed to initialize network api: %v", err)
+	}
 
 	err := networkAPI.CreateDefaultNetwork()
 	if err != nil {
@@ -146,9 +152,11 @@ func TestNetworkAPI_CreateDefaultNetwork(t *testing.T) {
 }
 
 func TestNetworkAPI_DeleteNetwork(t *testing.T) {
-	mockClient := setupMockClient("{}")
+	mockClient := setupMockClient("")
 	networkAPI := NetworkAPI{}
-	networkAPI.Init(mockClient, "test-token", "test-location")
+	if err := networkAPI.Init(mockClient, "test-token", "test-location"); err != nil {
+		t.Fatalf("failed to initialize network api: %v", err)
+	}
 
 	// Store the original DoFunc to verify it was called with the correct URL
 	originalDoFunc := mockClient.DoFunc
@@ -188,7 +196,9 @@ func TestNetworkAPI_SetAsDefault(t *testing.T) {
 
 	mockClient := setupMockClient(networkResponse)
 	networkAPI := NetworkAPI{}
-	networkAPI.Init(mockClient, "test-token", "test-location")
+	if err := networkAPI.Init(mockClient, "test-token", "test-location"); err != nil {
+		t.Fatalf("failed to initialize network api: %v", err)
+	}
 
 	// Store the original DoFunc to verify it was called with the correct URL
 	originalDoFunc := mockClient.DoFunc
@@ -240,7 +250,9 @@ func TestNetworkAPI_UpdateNetwork(t *testing.T) {
 
 	mockClient := setupMockClient(networkResponse)
 	networkAPI := NetworkAPI{}
-	networkAPI.Init(mockClient, "test-token", "test-location")
+	if err := networkAPI.Init(mockClient, "test-token", "test-location"); err != nil {
+		t.Fatalf("failed to initialize network api: %v", err)
+	}
 
 	// Store the original DoFunc to verify it was called with the correct URL and body
 	originalDoFunc := mockClient.DoFunc
@@ -254,13 +266,13 @@ func TestNetworkAPI_UpdateNetwork(t *testing.T) {
 		}
 
 		// Check that the body contains the new name
-		bodyBytes, _ := ioutil.ReadAll(req.Body)
+		bodyBytes, _ := io.ReadAll(req.Body)
 		bodyString := string(bodyBytes)
 		if !strings.Contains(bodyString, "updated-network") {
 			t.Errorf("Expected body to contain 'updated-network', got %s", bodyString)
 		}
 		// Restore the body for further processing
-		req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+		req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 		return originalDoFunc(req)
 	}

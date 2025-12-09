@@ -3,7 +3,7 @@ package firewall
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -22,7 +22,7 @@ func setupMockClient(responseBody string) *MockClient {
 		DoFunc: func(req *http.Request) (*http.Response, error) {
 			return &http.Response{
 				StatusCode: 200,
-				Body:       ioutil.NopCloser(bytes.NewBufferString(responseBody)),
+				Body:       io.NopCloser(bytes.NewBufferString(responseBody)),
 				Header:     make(http.Header),
 			}, nil
 		},
@@ -72,7 +72,9 @@ func TestFirewallAPI_ListFirewalls(t *testing.T) {
 
 	mockClient := setupMockClient(firewallsResponse)
 	firewallAPI := FirewallAPI{}
-	firewallAPI.Init(mockClient, "test-token", "test-location")
+	if err := firewallAPI.Init(mockClient, "test-token", "test-location"); err != nil {
+		t.Fatalf("failed to initialize firewall api: %v", err)
+	}
 
 	err := firewallAPI.ListFirewalls()
 	if err != nil {
@@ -115,7 +117,9 @@ func TestFirewallAPI_CreateFirewall(t *testing.T) {
 
 	mockClient := setupMockClient(firewallResponse)
 	firewallAPI := FirewallAPI{}
-	firewallAPI.Init(mockClient, "test-token", "test-location")
+	if err := firewallAPI.Init(mockClient, "test-token", "test-location"); err != nil {
+		t.Fatalf("failed to initialize firewall api: %v", err)
+	}
 
 	// Store the original DoFunc to verify it was called with the correct body
 	originalDoFunc := mockClient.DoFunc
@@ -137,8 +141,10 @@ func TestFirewallAPI_CreateFirewall(t *testing.T) {
 
 		// Decode the request body to verify it
 		var firewall Firewall
-		bodyBytes, _ := ioutil.ReadAll(req.Body)
-		json.Unmarshal(bodyBytes, &firewall)
+		bodyBytes, _ := io.ReadAll(req.Body)
+		if err := json.Unmarshal(bodyBytes, &firewall); err != nil {
+			t.Fatalf("failed to unmarshal firewall: %v", err)
+		}
 
 		if firewall.Name != "test-firewall" {
 			t.Errorf("Expected name 'test-firewall', got %s", firewall.Name)
@@ -149,7 +155,7 @@ func TestFirewallAPI_CreateFirewall(t *testing.T) {
 		}
 
 		// Restore the body for further processing
-		req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+		req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 		return originalDoFunc(req)
 	}
@@ -214,7 +220,9 @@ func TestFirewallAPI_UpdateFirewall(t *testing.T) {
 
 	mockClient := setupMockClient(firewallResponse)
 	firewallAPI := FirewallAPI{}
-	firewallAPI.Init(mockClient, "test-token", "test-location")
+	if err := firewallAPI.Init(mockClient, "test-token", "test-location"); err != nil {
+		t.Fatalf("failed to initialize firewall api: %v", err)
+	}
 
 	// Store the original DoFunc to verify it was called with the correct URL and body
 	originalDoFunc := mockClient.DoFunc
@@ -241,8 +249,10 @@ func TestFirewallAPI_UpdateFirewall(t *testing.T) {
 
 		// Decode the request body to verify it
 		var firewall Firewall
-		bodyBytes, _ := ioutil.ReadAll(req.Body)
-		json.Unmarshal(bodyBytes, &firewall)
+		bodyBytes, _ := io.ReadAll(req.Body)
+		if err := json.Unmarshal(bodyBytes, &firewall); err != nil {
+			t.Fatalf("failed to unmarshal firewall: %v", err)
+		}
 
 		if firewall.Name != "updated-firewall" {
 			t.Errorf("Expected name 'updated-firewall', got %s", firewall.Name)
@@ -253,7 +263,7 @@ func TestFirewallAPI_UpdateFirewall(t *testing.T) {
 		}
 
 		// Restore the body for further processing
-		req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+		req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 		return originalDoFunc(req)
 	}
@@ -298,7 +308,9 @@ func TestFirewallAPI_UpdateFirewall(t *testing.T) {
 func TestFirewallAPI_DeleteFirewall(t *testing.T) {
 	mockClient := setupMockClient("{}")
 	firewallAPI := FirewallAPI{}
-	firewallAPI.Init(mockClient, "test-token", "test-location")
+	if err := firewallAPI.Init(mockClient, "test-token", "test-location"); err != nil {
+		t.Fatalf("failed to initialize firewall api: %v", err)
+	}
 
 	// Store the original DoFunc to verify it was called with the correct URL
 	originalDoFunc := mockClient.DoFunc
@@ -359,14 +371,14 @@ func TestFirewallAPI_AssignFirewall(t *testing.T) {
 		}
 
 		// Check the body contains the VM UUID
-		bodyBytes, _ := ioutil.ReadAll(req.Body)
+		bodyBytes, _ := io.ReadAll(req.Body)
 		bodyString := string(bodyBytes)
 		if !strings.Contains(bodyString, "vm-uuid") {
 			t.Errorf("Expected body to contain 'vm-uuid', got %s", bodyString)
 		}
 
 		// Restore the body for further processing
-		req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+		req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 		return originalDoFunc(req)
 	}
@@ -410,14 +422,14 @@ func TestFirewallAPI_UnassignFirewall(t *testing.T) {
 		}
 
 		// Check the body contains the VM UUID
-		bodyBytes, _ := ioutil.ReadAll(req.Body)
+		bodyBytes, _ := io.ReadAll(req.Body)
 		bodyString := string(bodyBytes)
 		if !strings.Contains(bodyString, "vm-uuid") {
 			t.Errorf("Expected body to contain 'vm-uuid', got %s", bodyString)
 		}
 
 		// Restore the body for further processing
-		req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+		req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 		return originalDoFunc(req)
 	}

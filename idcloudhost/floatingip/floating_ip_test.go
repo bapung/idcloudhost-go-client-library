@@ -26,7 +26,9 @@ var (
 )
 
 func TestGetIP(t *testing.T) {
-	testFloatingIPAPI.Init(mockHttpClient, userAuthToken, loc)
+	if err := testFloatingIPAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize floating ip api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -58,8 +60,10 @@ func TestGetIP(t *testing.T) {
 	}
 }
 
-func TestCreateIP(t *testing.T) {
-	testFloatingIPAPI.Init(mockHttpClient, userAuthToken, loc)
+func TestCreateFloatingIP(t *testing.T) {
+	if err := testFloatingIPAPI.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize floating ip api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string

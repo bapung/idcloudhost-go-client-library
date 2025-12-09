@@ -3,7 +3,6 @@ package loadbalancer
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -80,9 +79,13 @@ func (lb *LoadBalancerAPI) ListLoadBalancers() error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return json.NewDecoder(r.Body).Decode(&lb.LoadBalancerList)
 }
@@ -99,9 +102,13 @@ func (lb *LoadBalancerAPI) GetLoadBalancer(uuid string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return json.NewDecoder(r.Body).Decode(&lb.LoadBalancer)
 }
@@ -124,10 +131,14 @@ func (lb *LoadBalancerAPI) CreateLoadBalancer(loadBalancer *LoadBalancer) error 
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return json.NewDecoder(r.Body).Decode(&lb.LoadBalancer)
@@ -159,10 +170,14 @@ func (lb *LoadBalancerAPI) RenameLoadBalancer(uuid string, name string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return json.NewDecoder(r.Body).Decode(&lb.LoadBalancer)
@@ -180,9 +195,13 @@ func (lb *LoadBalancerAPI) DeleteLoadBalancer(uuid string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 	return nil
 }
@@ -207,10 +226,14 @@ func (lb *LoadBalancerAPI) AddTarget(uuid string, target *Target) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return json.NewDecoder(r.Body).Decode(&lb.LoadBalancer)
@@ -242,10 +265,14 @@ func (lb *LoadBalancerAPI) RemoveTarget(uuid string, vmUUID string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return nil
@@ -271,10 +298,14 @@ func (lb *LoadBalancerAPI) AddRule(uuid string, rule *ForwardingRule) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return json.NewDecoder(r.Body).Decode(&lb.LoadBalancer)
@@ -294,10 +325,14 @@ func (lb *LoadBalancerAPI) RemoveRule(uuid string, ruleID int) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return nil
@@ -329,10 +364,14 @@ func (lb *LoadBalancerAPI) ChangeBillingAccount(uuid string, billingAccountID in
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%v", r.StatusCode))
+		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return json.NewDecoder(r.Body).Decode(&lb.LoadBalancer)

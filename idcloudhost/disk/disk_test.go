@@ -1,12 +1,12 @@
 package disk
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
-	"errors"
-	"fmt"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,16 +27,18 @@ var (
 )
 
 func TestGetDisk(t *testing.T) {
-	testDiskApi.Init(mockHttpClient, userAuthToken, loc)
+	if err := testDiskApi.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize disk api: %v", err)
+	}
 	testCases := []struct {
-		vmUUID		string
-		UUID 		string
-		DiskList  	[]DiskStorage
-		Error		error
+		vmUUID   string
+		UUID     string
+		DiskList []DiskStorage
+		Error    error
 	}{
 		{
 			vmUUID: "someVMuuid",
-			UUID: "okeuuid",
+			UUID:   "okeuuid",
 			DiskList: []DiskStorage{
 				{
 					"aaa", 1, "aaaa", "aaa", true, []string{}, false, 20, "aaa", "aaa", 123, "okeuuid",
@@ -58,7 +60,9 @@ func TestGetDisk(t *testing.T) {
 }
 
 func TestCreateDisk(t *testing.T) {
-	testDiskApi.Init(mockHttpClient, userAuthToken, loc)
+	if err := testDiskApi.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize disk api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -93,7 +97,9 @@ func TestCreateDisk(t *testing.T) {
 }
 
 func TestModifyDisk(t *testing.T) {
-	testDiskApi.Init(mockHttpClient, userAuthToken, loc)
+	if err := testDiskApi.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize disk api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string
@@ -118,7 +124,7 @@ func TestModifyDisk(t *testing.T) {
 			},
 			Body:       `{"created_at":"2019-08-14 13:57:44","name":"vdc","pool":"default","primary":false,"replica":[],"shared":false,"size":50,"type":"block","uuid":"valid-disk-uuid"}`,
 			StatusCode: http.StatusNotFound,
-			Error:      errors.New(fmt.Sprintf("%v",http.StatusNotFound)),
+			Error:      fmt.Errorf("%v", http.StatusNotFound),
 		},
 	}
 	for _, test := range testCases {
@@ -143,7 +149,9 @@ func TestModifyDisk(t *testing.T) {
 }
 
 func TestDeleteDisk(t *testing.T) {
-	testDiskApi.Init(mockHttpClient, userAuthToken, loc)
+	if err := testDiskApi.Init(mockHttpClient, userAuthToken, loc); err != nil {
+		t.Fatalf("failed to initialize disk api: %v", err)
+	}
 	testCases := []struct {
 		RequestData map[string]interface{}
 		Body        string

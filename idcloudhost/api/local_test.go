@@ -7,8 +7,6 @@ import (
 	"github.com/bapung/idcloudhost-go-client-library/idcloudhost/vm"
 )
 
-const userAuthToken = "h6jyi7lvaqniRk5JhX3FoCExzmh4pkIh"
-
 // Mock VM client
 type mockVMClient struct {
 	CreateCalled bool
