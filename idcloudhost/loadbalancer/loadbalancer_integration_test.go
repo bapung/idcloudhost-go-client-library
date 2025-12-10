@@ -12,7 +12,7 @@ import (
 func getEnvOrSkip(t *testing.T, key string) string {
 	val := os.Getenv(key)
 	if val == "" {
-		t.Skipf("Environment variable %s not set", key)
+		t.Fatalf("Environment variable %s not set", key)
 	}
 	return val
 }

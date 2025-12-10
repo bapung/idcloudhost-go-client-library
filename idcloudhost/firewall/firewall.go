@@ -13,23 +13,27 @@ type HTTPClient interface {
 }
 
 type FirewallRule struct {
-	Type        string `json:"type"`
-	Protocol    string `json:"protocol"`
-	PortRange   string `json:"port_range,omitempty"`
-	Source      string `json:"source,omitempty"`
-	Destination string `json:"destination,omitempty"`
-	Description string `json:"description,omitempty"`
+	UUID             string                 `json:"uuid,omitempty"`        // Rule UUID (for updates)
+	Type             map[string]interface{} `json:"type,omitempty"`        // UI metadata (optional, can be ignored)
+	Direction        string                 `json:"direction"`             // "inbound" or "outbound"
+	Protocol         string                 `json:"protocol"`              // "tcp", "udp", "icmp", "any"
+	PortStart        int                    `json:"port_start,omitempty"`  // Starting port number
+	PortEnd          int                    `json:"port_end,omitempty"`    // Ending port number (optional)
+	EndpointSpecType string                 `json:"endpoint_spec_type"`    // "any", "cidr", "firewall", "ip_prefixes"
+	EndpointSpec     []string               `json:"endpoint_spec"`         // List of CIDR blocks or firewall IDs
+	Description      string                 `json:"description,omitempty"` // Optional description
 }
 
 type Firewall struct {
-	ID          int            `json:"id,omitempty"`
-	Name        string         `json:"name"`
-	UUID        string         `json:"uuid,omitempty"`
-	UserID      int            `json:"user_id,omitempty"`
-	Description string         `json:"description,omitempty"`
-	Rules       []FirewallRule `json:"rules"`
-	CreatedAt   string         `json:"created_at,omitempty"`
-	UpdatedAt   string         `json:"updated_at,omitempty"`
+	ID               int            `json:"id,omitempty"`
+	DisplayName      string         `json:"display_name"`       // Use display_name as per API
+	BillingAccountID int            `json:"billing_account_id"` // Required for creation
+	UUID             string         `json:"uuid,omitempty"`
+	UserID           int            `json:"user_id,omitempty"`
+	Description      string         `json:"description,omitempty"`
+	Rules            []FirewallRule `json:"rules"`
+	CreatedAt        string         `json:"created_at,omitempty"`
+	UpdatedAt        string         `json:"updated_at,omitempty"`
 }
 
 type FirewallAPI struct {
@@ -132,7 +136,13 @@ func (f *FirewallAPI) UpdateFirewall(uuid string, firewall *Firewall) error {
 	}
 
 	url := fmt.Sprintf("%s/%s", f.ApiEndpoint, uuid)
-	payloadJSON, err := json.Marshal(firewall)
+	// For updates, only send rules
+	payload := struct {
+		Rules []FirewallRule `json:"rules"`
+	}{
+		Rules: firewall.Rules,
+	}
+	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
@@ -179,7 +189,7 @@ func (f *FirewallAPI) DeleteFirewall(uuid string) error {
 		}
 	}()
 
-	if r.StatusCode != http.StatusOK {
+	if (r.StatusCode != http.StatusOK) && (r.StatusCode != http.StatusNoContent) {
 		return fmt.Errorf("%v", r.StatusCode)
 	}
 
@@ -267,19 +277,25 @@ func (f *FirewallAPI) UnassignFirewall(firewallUUID string, vmUUID string) error
 // validateFirewallRules validates the firewall rules
 func validateFirewallRules(rules []FirewallRule) error {
 	for _, rule := range rules {
-		// Check type (required)
-		if rule.Type != "ingress" && rule.Type != "egress" {
-			return fmt.Errorf("firewall rule type must be either 'ingress' or 'egress'")
+		// Check direction (required)
+		if rule.Direction != "inbound" && rule.Direction != "outbound" {
+			return fmt.Errorf("firewall rule direction must be either 'inbound' or 'outbound'")
 		}
 
 		// Check protocol (required)
-		if rule.Protocol != "tcp" && rule.Protocol != "udp" && rule.Protocol != "icmp" {
-			return fmt.Errorf("firewall rule protocol must be one of 'tcp', 'udp', or 'icmp'")
+		if rule.Protocol != "tcp" && rule.Protocol != "udp" && rule.Protocol != "icmp" && rule.Protocol != "any" {
+			return fmt.Errorf("firewall rule protocol must be one of 'tcp', 'udp', 'icmp', or 'any'")
 		}
 
-		// Check port range format for tcp/udp
-		// TODO: add more detailed port range validation if needed
-		// For now, we accept any non-empty port range for non-ICMP protocols
+		// Check endpoint_spec_type (required)
+		if rule.EndpointSpecType != "any" && rule.EndpointSpecType != "cidr" && rule.EndpointSpecType != "firewall" && rule.EndpointSpecType != "ip_prefixes" {
+			return fmt.Errorf("firewall rule endpoint_spec_type must be one of 'any', 'cidr', 'firewall', or 'ip_prefixes'")
+		}
+
+		// Validate endpoint_spec is not nil (should be empty array if "any")
+		if rule.EndpointSpec == nil {
+			return fmt.Errorf("firewall rule endpoint_spec cannot be nil, use empty array for 'any' type")
+		}
 	}
 	return nil
 }

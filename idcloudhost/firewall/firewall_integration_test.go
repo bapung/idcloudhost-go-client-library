@@ -3,6 +3,7 @@
 package firewall
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -11,7 +12,15 @@ import (
 func getEnvOrSkip(t *testing.T, key string) string {
 	val := os.Getenv(key)
 	if val == "" {
-		t.Skipf("Environment variable %s not set", key)
+		t.Fatalf("Environment variable %s not set", key)
+	}
+	return val
+}
+
+func getEnvOrDefault(t *testing.T, key string, defaultVal string) string {
+	val := os.Getenv(key)
+	if val == "" {
+		return defaultVal
 	}
 	return val
 }
@@ -19,6 +28,7 @@ func getEnvOrSkip(t *testing.T, key string) string {
 func TestFirewallIntegration(t *testing.T) {
 	authToken := getEnvOrSkip(t, "IDCLOUDHOST_API_KEY")
 	location := getEnvOrSkip(t, "IDCLOUDHOST_LOCATION")
+	billingAccountID := getEnvOrDefault(t, "IDCLOUDHOST_BILLING_ACCOUNT_ID", "1200132376")
 
 	client := &http.Client{}
 	api := FirewallAPI{}
@@ -26,17 +36,33 @@ func TestFirewallIntegration(t *testing.T) {
 		t.Fatalf("Init failed: %v", err)
 	}
 
-	// 1. Create firewall
+	// Convert billing account ID from string to int
+	var billingID int
+	if _, err := fmt.Sscanf(billingAccountID, "%d", &billingID); err != nil {
+		t.Fatalf("Invalid billing account ID: %v", err)
+	}
+
+	// 1. Create firewall with new API structure
 	firewall := &Firewall{
-		Name:        "integration-test-fw",
-		Description: "Integration test firewall",
+		DisplayName:      "integration-test-fw",
+		BillingAccountID: billingID,
+		Description:      "Integration test firewall",
 		Rules: []FirewallRule{
 			{
-				Type:        "ingress",
-				Protocol:    "tcp",
-				PortRange:   "22",
-				Source:      "0.0.0.0/0",
-				Description: "Allow SSH",
+				Direction:        "inbound",
+				Protocol:         "tcp",
+				PortStart:        22,
+				EndpointSpecType: "any",
+				EndpointSpec:     []string{},
+				Description:      "Allow SSH",
+			},
+			{
+				Direction:        "outbound",
+				Protocol:         "any",
+				PortStart:        0,
+				EndpointSpecType: "any",
+				EndpointSpec:     []string{},
+				Description:      "Allow all outbound",
 			},
 		},
 	}
@@ -61,13 +87,28 @@ func TestFirewallIntegration(t *testing.T) {
 		t.Fatalf("Created firewall not found in list")
 	}
 
-	// 3. Update firewall
-	firewall.Name = "integration-test-fw-updated"
-	if err := api.UpdateFirewall(uuid, firewall); err != nil {
+	// 3. Update firewall - preserve rule UUIDs from created firewall
+	// Get the rules with UUIDs from the created firewall
+	updatedFirewall := &Firewall{
+		Rules: api.Firewall.Rules, // Preserve existing rules with their UUIDs
+	}
+	// Add a new rule without UUID
+	updatedFirewall.Rules = append(updatedFirewall.Rules, FirewallRule{
+		Direction:        "inbound",
+		Protocol:         "tcp",
+		PortStart:        80,
+		EndpointSpecType: "any",
+		EndpointSpec:     []string{},
+		Description:      "Allow HTTP",
+	})
+
+	if err := api.UpdateFirewall(uuid, updatedFirewall); err != nil {
 		t.Fatalf("UpdateFirewall failed: %v", err)
 	}
-	if api.Firewall.Name != "integration-test-fw-updated" {
-		t.Errorf("Firewall name not updated")
+
+	// Verify the update
+	if len(api.Firewall.Rules) != 3 {
+		t.Errorf("Expected 3 rules after update, got %d", len(api.Firewall.Rules))
 	}
 
 	// 4. Delete firewall (cleanup)
