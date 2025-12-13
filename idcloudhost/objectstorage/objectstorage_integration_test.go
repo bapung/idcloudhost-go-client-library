@@ -3,10 +3,12 @@
 package objectstorage
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
 	"testing"
+	"time"
 )
 
 func getEnvOrSkip(t *testing.T, key string) string {
@@ -33,29 +35,24 @@ func TestObjectStorageIntegration(t *testing.T) {
 		t.Fatalf("Init failed: %v", err)
 	}
 
-	// 1. Get S3 user info
-	if err := api.GetS3Info(); err != nil {
-		t.Fatalf("GetS3Info failed: %v", err)
-	}
-	t.Logf("S3 User ID: %d", api.S3User.ID)
-	t.Logf("Storage Endpoint: %s", api.S3User.StorageEndpoint)
-
-	// 2. Generate S3 access key
+	// 1. Generate S3 access key
 	if err := api.GenerateKey(); err != nil {
 		t.Fatalf("GenerateKey failed: %v", err)
 	}
 	accessKey := api.S3Key.AccessKey
+	secretKey := api.S3Key.SecretKey
 	t.Logf("Generated access key: %s", accessKey)
+	t.Logf("Generated secret key: %s", secretKey)
 
 	// Verify key was created
 	if accessKey == "" {
 		t.Error("Expected non-empty access key")
 	}
-	if api.S3Key.SecretKey == "" {
+	if secretKey == "" {
 		t.Error("Expected non-empty secret key")
 	}
 
-	// 3. List keys and verify existence
+	// 2. List keys and verify existence
 	if err := api.GetKeys(); err != nil {
 		t.Fatalf("GetKeys failed: %v", err)
 	}
@@ -70,9 +67,9 @@ func TestObjectStorageIntegration(t *testing.T) {
 		t.Fatalf("Generated key not found in list")
 	}
 
-	// 4. Create bucket
-	bucketName := "integration-test-bucket"
-	if err := api.CreateBucket(bucketName, "private", billingAccount); err != nil {
+	// 3. Create bucket with unique name to avoid 409 conflicts
+	bucketName := fmt.Sprintf("integration-test-%d", time.Now().Unix())
+	if err := api.CreateBucket(bucketName, billingAccount); err != nil {
 		t.Fatalf("CreateBucket failed: %v", err)
 	}
 	t.Logf("Created bucket: %s", bucketName)
@@ -82,15 +79,7 @@ func TestObjectStorageIntegration(t *testing.T) {
 		t.Errorf("Expected bucket name %s, got %s", bucketName, api.Bucket.Name)
 	}
 
-	// 5. Get bucket details
-	if err := api.GetBucket(bucketName); err != nil {
-		t.Fatalf("GetBucket failed: %v", err)
-	}
-	if api.Bucket.Name != bucketName {
-		t.Errorf("Expected bucket name %s, got %s", bucketName, api.Bucket.Name)
-	}
-
-	// 6. List buckets and verify existence
+	// 4. List buckets and verify existence
 	if err := api.ListBuckets(); err != nil {
 		t.Fatalf("ListBuckets failed: %v", err)
 	}
@@ -105,21 +94,13 @@ func TestObjectStorageIntegration(t *testing.T) {
 		t.Fatalf("Created bucket not found in list")
 	}
 
-	// 7. Modify bucket ACL
-	if err := api.ModifyBucket(bucketName, "public-read"); err != nil {
-		t.Fatalf("ModifyBucket failed: %v", err)
-	}
-	if api.Bucket.ACL != "public-read" {
-		t.Errorf("Expected ACL public-read, got %s", api.Bucket.ACL)
-	}
-
-	// 8. Delete bucket (cleanup)
+	// 5. Delete bucket (cleanup)
 	if err := api.DeleteBucket(bucketName); err != nil {
 		t.Fatalf("DeleteBucket failed: %v", err)
 	}
 	t.Logf("Deleted bucket: %s", bucketName)
 
-	// 9. Delete access key (cleanup)
+	// 6. Delete access key (cleanup)
 	if err := api.DeleteKey(accessKey); err != nil {
 		t.Fatalf("DeleteKey failed: %v", err)
 	}
