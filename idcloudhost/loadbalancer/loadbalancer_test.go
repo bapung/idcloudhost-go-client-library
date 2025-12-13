@@ -35,7 +35,7 @@ func TestListLoadBalancers(t *testing.T) {
 		Error      error
 	}{
 		{
-			Body:       `[{"id":1,"uuid":"lb-uuid-123","name":"test-lb","billing_account_id":1234,"user_id":1,"target_ips":[],"forward_rules":[{"id":1,"name":"http-rule","protocol":"http","frontend_port":80,"backend_port":8080,"health_check":true,"health_timeout":30}],"created_at":"2023-01-01 10:00:00","updated_at":"2023-01-01 10:00:00"}]`,
+			Body:       `[{"uuid":"72fa225f-5cb1-45cf-83ed-b0f441b0b815","display_name":"xyz1234","user_id":4384,"billing_account_id":1200132376,"created_at":"2025-12-13 11:54:16","updated_at":"2025-12-13 11:54:16","is_deleted":false,"deleted_at":null,"private_address":"10.4.207.254","network_uuid":"730bf645-9b36-44b8-8ca1-46d2480cc0d6","forwarding_rules":[{"protocol":"TCP","uuid":"a96ee226-7204-47b4-8782-02fbbdb6d4e7","created_at":"2025-12-13 11:54:16","source_port":80,"target_port":80,"settings":{"connection_limit":10000,"session_persistence":"SOURCE_IP"}}],"targets":[{"created_at":"2025-12-13 11:54:16","target_uuid":"70517643-b046-48e3-9bae-83dc2c143beb","target_type":"vm","target_ip_address":"10.4.207.133"}]}]`,
 			StatusCode: http.StatusOK,
 			Error:      nil,
 		},
@@ -53,8 +53,10 @@ func TestListLoadBalancers(t *testing.T) {
 		}
 		if err == nil {
 			assert.NotEmpty(t, testLoadBalancerAPI.LoadBalancerList)
-			assert.Equal(t, "lb-uuid-123", testLoadBalancerAPI.LoadBalancerList[0].UUID)
-			assert.Equal(t, "test-lb", testLoadBalancerAPI.LoadBalancerList[0].Name)
+			assert.Equal(t, "72fa225f-5cb1-45cf-83ed-b0f441b0b815", testLoadBalancerAPI.LoadBalancerList[0].UUID)
+			assert.Equal(t, "xyz1234", testLoadBalancerAPI.LoadBalancerList[0].DisplayName)
+			assert.Equal(t, "10.4.207.254", testLoadBalancerAPI.LoadBalancerList[0].PrivateAddress)
+			assert.Equal(t, "730bf645-9b36-44b8-8ca1-46d2480cc0d6", testLoadBalancerAPI.LoadBalancerList[0].NetworkUUID)
 		}
 	}
 }
@@ -71,9 +73,9 @@ func TestGetLoadBalancer(t *testing.T) {
 	}{
 		{
 			RequestData: map[string]interface{}{
-				"uuid": "lb-uuid-123",
+				"uuid": "72fa225f-5cb1-45cf-83ed-b0f441b0b815",
 			},
-			Body:       `{"id":1,"uuid":"lb-uuid-123","name":"test-lb","billing_account_id":1234,"user_id":1,"target_ips":[{"vm_id":1,"vm_uuid":"vm-uuid-1","ip_addr":"10.0.0.1","name":"vm1"}],"forward_rules":[{"id":1,"name":"http-rule","protocol":"http","frontend_port":80,"backend_port":8080,"health_check":true,"health_timeout":30}],"created_at":"2023-01-01 10:00:00","updated_at":"2023-01-01 10:00:00"}`,
+			Body:       `{"uuid":"72fa225f-5cb1-45cf-83ed-b0f441b0b815","display_name":"xyz1234","user_id":4384,"billing_account_id":1200132376,"created_at":"2025-12-13 11:54:16","updated_at":"2025-12-13 11:54:16","is_deleted":false,"deleted_at":null,"private_address":"10.4.207.254","network_uuid":"730bf645-9b36-44b8-8ca1-46d2480cc0d6","forwarding_rules":[{"protocol":"TCP","uuid":"a96ee226-7204-47b4-8782-02fbbdb6d4e7","created_at":"2025-12-13 11:54:16","source_port":80,"target_port":80,"settings":{"connection_limit":10000,"session_persistence":"SOURCE_IP"}}],"targets":[{"created_at":"2025-12-13 11:54:16","target_uuid":"70517643-b046-48e3-9bae-83dc2c143beb","target_type":"vm","target_ip_address":"10.4.207.133"}]}`,
 			StatusCode: http.StatusOK,
 			Error:      nil,
 		},
@@ -92,9 +94,12 @@ func TestGetLoadBalancer(t *testing.T) {
 		}
 		if err == nil {
 			assert.Equal(t, uuid, testLoadBalancerAPI.LoadBalancer.UUID)
-			assert.Equal(t, "test-lb", testLoadBalancerAPI.LoadBalancer.Name)
-			assert.NotEmpty(t, testLoadBalancerAPI.LoadBalancer.TargetIPs)
-			assert.NotEmpty(t, testLoadBalancerAPI.LoadBalancer.ForwardRules)
+			assert.Equal(t, "xyz1234", testLoadBalancerAPI.LoadBalancer.DisplayName)
+			assert.NotEmpty(t, testLoadBalancerAPI.LoadBalancer.Targets)
+			assert.NotEmpty(t, testLoadBalancerAPI.LoadBalancer.ForwardingRules)
+			assert.Equal(t, "10.4.207.254", testLoadBalancerAPI.LoadBalancer.PrivateAddress)
+			assert.Equal(t, "vm", testLoadBalancerAPI.LoadBalancer.Targets[0].TargetType)
+			assert.Equal(t, "70517643-b046-48e3-9bae-83dc2c143beb", testLoadBalancerAPI.LoadBalancer.Targets[0].TargetUUID)
 		}
 	}
 }
@@ -104,26 +109,31 @@ func TestCreateLoadBalancer(t *testing.T) {
 		t.Fatalf("failed to initialize loadbalancer api: %v", err)
 	}
 	testCases := []struct {
-		RequestData *LoadBalancer
+		RequestData *CreateLoadBalancerRequest
 		Body        string
 		StatusCode  int
 		Error       error
 	}{
 		{
-			RequestData: &LoadBalancer{
-				Name:           "new-lb",
-				BillingAccount: 1234,
-				ForwardRules: []ForwardingRule{
+			RequestData: &CreateLoadBalancerRequest{
+				ReservePublicIP: true,
+				NetworkUUID:     "730bf645-9b36-44b8-8ca1-46d2480cc0d6",
+				Targets: []CreateTargetRequest{
 					{
-						Name:         "http-rule",
-						Protocol:     "http",
-						FrontendPort: 80,
-						BackendPort:  8080,
-						HealthCheck:  true,
+						TargetType: "vm",
+						TargetUUID: "70517643-b046-48e3-9bae-83dc2c143beb",
 					},
 				},
+				Rules: []CreateRuleRequest{
+					{
+						SourcePort: 80,
+						TargetPort: 80,
+					},
+				},
+				DisplayName:      "xyz1234",
+				BillingAccountID: 1200132376,
 			},
-			Body:       `{"id":1,"uuid":"lb-uuid-new","name":"new-lb","billing_account_id":1234,"user_id":1,"target_ips":[],"forward_rules":[{"id":1,"name":"http-rule","protocol":"http","frontend_port":80,"backend_port":8080,"health_check":true,"health_timeout":30}],"created_at":"2023-01-01 10:00:00","updated_at":"2023-01-01 10:00:00"}`,
+			Body:       `{"uuid":"72fa225f-5cb1-45cf-83ed-b0f441b0b815","display_name":"xyz1234","user_id":4384,"billing_account_id":1200132376,"created_at":"2025-12-13 11:54:16","updated_at":"2025-12-13 11:54:16","is_deleted":false,"deleted_at":null,"private_address":"10.4.207.254","network_uuid":"730bf645-9b36-44b8-8ca1-46d2480cc0d6","forwarding_rules":[{"protocol":"TCP","uuid":"a96ee226-7204-47b4-8782-02fbbdb6d4e7","created_at":"2025-12-13 11:54:16","source_port":80,"target_port":80,"settings":{"connection_limit":10000,"session_persistence":"SOURCE_IP"}}],"targets":[{"created_at":"2025-12-13 11:54:16","target_uuid":"70517643-b046-48e3-9bae-83dc2c143beb","target_type":"vm","target_ip_address":"10.4.207.133"}]}`,
 			StatusCode: http.StatusOK,
 			Error:      nil,
 		},
@@ -140,9 +150,12 @@ func TestCreateLoadBalancer(t *testing.T) {
 			t.Fatalf("want %v, got %v", test.Error, err)
 		}
 		if err == nil {
-			assert.Equal(t, test.RequestData.Name, testLoadBalancerAPI.LoadBalancer.Name)
-			assert.Equal(t, test.RequestData.BillingAccount, testLoadBalancerAPI.LoadBalancer.BillingAccount)
+			assert.Equal(t, test.RequestData.DisplayName, testLoadBalancerAPI.LoadBalancer.DisplayName)
+			assert.Equal(t, test.RequestData.BillingAccountID, testLoadBalancerAPI.LoadBalancer.BillingAccountID)
 			assert.NotEmpty(t, testLoadBalancerAPI.LoadBalancer.UUID)
+			assert.Equal(t, test.RequestData.NetworkUUID, testLoadBalancerAPI.LoadBalancer.NetworkUUID)
+			assert.NotEmpty(t, testLoadBalancerAPI.LoadBalancer.Targets)
+			assert.NotEmpty(t, testLoadBalancerAPI.LoadBalancer.ForwardingRules)
 		}
 	}
 }
@@ -159,10 +172,10 @@ func TestModifyLoadBalancer(t *testing.T) {
 	}{
 		{
 			RequestData: map[string]interface{}{
-				"uuid": "lb-uuid-123",
-				"name": "renamed-lb",
+				"uuid":         "72fa225f-5cb1-45cf-83ed-b0f441b0b815",
+				"display_name": "renamed-lb",
 			},
-			Body:       `{"id":1,"uuid":"lb-uuid-123","name":"renamed-lb","billing_account_id":1234,"user_id":1,"target_ips":[],"forward_rules":[],"created_at":"2023-01-01 10:00:00","updated_at":"2023-01-01 11:00:00"}`,
+			Body:       `{"uuid":"72fa225f-5cb1-45cf-83ed-b0f441b0b815","display_name":"renamed-lb","user_id":4384,"billing_account_id":1200132376,"created_at":"2025-12-13 11:54:16","updated_at":"2025-12-13 12:00:00","is_deleted":false,"deleted_at":null,"private_address":"10.4.207.254","network_uuid":"730bf645-9b36-44b8-8ca1-46d2480cc0d6","forwarding_rules":[],"targets":[]}`,
 			StatusCode: http.StatusOK,
 			Error:      nil,
 		},
@@ -175,13 +188,13 @@ func TestModifyLoadBalancer(t *testing.T) {
 			}, nil
 		}
 		uuid := test.RequestData["uuid"].(string)
-		name := test.RequestData["name"].(string)
-		err := testLoadBalancerAPI.RenameLoadBalancer(uuid, name)
+		displayName := test.RequestData["display_name"].(string)
+		err := testLoadBalancerAPI.RenameLoadBalancer(uuid, displayName)
 		if err != nil && test.Error != nil && err.Error() != test.Error.Error() {
 			t.Fatalf("want %v, got %v", test.Error, err)
 		}
 		if err == nil {
-			assert.Equal(t, name, testLoadBalancerAPI.LoadBalancer.Name)
+			assert.Equal(t, displayName, testLoadBalancerAPI.LoadBalancer.DisplayName)
 			assert.Equal(t, uuid, testLoadBalancerAPI.LoadBalancer.UUID)
 		}
 	}
@@ -199,9 +212,9 @@ func TestDeleteLoadBalancer(t *testing.T) {
 	}{
 		{
 			RequestData: map[string]interface{}{
-				"uuid": "lb-uuid-123",
+				"uuid": "72fa225f-5cb1-45cf-83ed-b0f441b0b815",
 			},
-			Body:       `{"success":true}`,
+			Body:       ``,
 			StatusCode: http.StatusOK,
 			Error:      nil,
 		},
@@ -233,12 +246,13 @@ func TestAddTarget(t *testing.T) {
 	}{
 		{
 			RequestData: map[string]interface{}{
-				"uuid": "lb-uuid-123",
-				"target": &Target{
-					VMUUID: "vm-uuid-1",
+				"uuid": "72fa225f-5cb1-45cf-83ed-b0f441b0b815",
+				"target": &CreateTargetRequest{
+					TargetType: "vm",
+					TargetUUID: "70517643-b046-48e3-9bae-83dc2c143beb",
 				},
 			},
-			Body:       `{"id":1,"uuid":"lb-uuid-123","name":"test-lb","billing_account_id":1234,"user_id":1,"target_ips":[{"vm_id":1,"vm_uuid":"vm-uuid-1","ip_addr":"10.0.0.1","name":"vm1"}],"forward_rules":[],"created_at":"2023-01-01 10:00:00","updated_at":"2023-01-01 10:00:00"}`,
+			Body:       `{"created_at":"2025-12-13 11:55:09","target_uuid":"70517643-b046-48e3-9bae-83dc2c143beb","target_type":"vm","target_ip_address":null}`,
 			StatusCode: http.StatusOK,
 			Error:      nil,
 		},
@@ -251,14 +265,15 @@ func TestAddTarget(t *testing.T) {
 			}, nil
 		}
 		uuid := test.RequestData["uuid"].(string)
-		target := test.RequestData["target"].(*Target)
+		target := test.RequestData["target"].(*CreateTargetRequest)
 		err := testLoadBalancerAPI.AddTarget(uuid, target)
 		if err != nil && test.Error != nil && err.Error() != test.Error.Error() {
 			t.Fatalf("want %v, got %v", test.Error, err)
 		}
 		if err == nil {
-			assert.NotEmpty(t, testLoadBalancerAPI.LoadBalancer.TargetIPs)
-			assert.Equal(t, target.VMUUID, testLoadBalancerAPI.LoadBalancer.TargetIPs[0].VMUUID)
+			assert.NotNil(t, testLoadBalancerAPI.Target)
+			assert.Equal(t, target.TargetUUID, testLoadBalancerAPI.Target.TargetUUID)
+			assert.Equal(t, target.TargetType, testLoadBalancerAPI.Target.TargetType)
 		}
 	}
 }
@@ -275,11 +290,11 @@ func TestRemoveTarget(t *testing.T) {
 	}{
 		{
 			RequestData: map[string]interface{}{
-				"uuid":    "lb-uuid-123",
-				"vm_uuid": "vm-uuid-1",
+				"uuid":        "72fa225f-5cb1-45cf-83ed-b0f441b0b815",
+				"target_uuid": "70517643-b046-48e3-9bae-83dc2c143beb",
 			},
-			Body:       `{"success":true}`,
-			StatusCode: http.StatusOK,
+			Body:       ``,
+			StatusCode: http.StatusNoContent,
 			Error:      nil,
 		},
 	}
@@ -291,8 +306,8 @@ func TestRemoveTarget(t *testing.T) {
 			}, nil
 		}
 		uuid := test.RequestData["uuid"].(string)
-		vmUUID := test.RequestData["vm_uuid"].(string)
-		err := testLoadBalancerAPI.RemoveTarget(uuid, vmUUID)
+		targetUUID := test.RequestData["target_uuid"].(string)
+		err := testLoadBalancerAPI.RemoveTarget(uuid, targetUUID)
 		if err != nil && test.Error != nil && err.Error() != test.Error.Error() {
 			t.Fatalf("want %v, got %v", test.Error, err)
 		}
@@ -311,16 +326,13 @@ func TestAddRule(t *testing.T) {
 	}{
 		{
 			RequestData: map[string]interface{}{
-				"uuid": "lb-uuid-123",
-				"rule": &ForwardingRule{
-					Name:         "https-rule",
-					Protocol:     "https",
-					FrontendPort: 443,
-					BackendPort:  8443,
-					HealthCheck:  true,
+				"uuid": "72fa225f-5cb1-45cf-83ed-b0f441b0b815",
+				"rule": &CreateRuleRequest{
+					SourcePort: 443,
+					TargetPort: 8443,
 				},
 			},
-			Body:       `{"id":1,"uuid":"lb-uuid-123","name":"test-lb","billing_account_id":1234,"user_id":1,"target_ips":[],"forward_rules":[{"id":1,"name":"https-rule","protocol":"https","frontend_port":443,"backend_port":8443,"health_check":true,"health_timeout":30}],"created_at":"2023-01-01 10:00:00","updated_at":"2023-01-01 10:00:00"}`,
+			Body:       `{"protocol":"TCP","uuid":"5b0d63c4-6998-49c8-a09d-651f5763a599","created_at":"2025-12-13 11:56:16","source_port":443,"target_port":8443,"settings":{"connection_limit":10000,"session_persistence":"SOURCE_IP"}}`,
 			StatusCode: http.StatusOK,
 			Error:      nil,
 		},
@@ -333,15 +345,17 @@ func TestAddRule(t *testing.T) {
 			}, nil
 		}
 		uuid := test.RequestData["uuid"].(string)
-		rule := test.RequestData["rule"].(*ForwardingRule)
+		rule := test.RequestData["rule"].(*CreateRuleRequest)
 		err := testLoadBalancerAPI.AddRule(uuid, rule)
 		if err != nil && test.Error != nil && err.Error() != test.Error.Error() {
 			t.Fatalf("want %v, got %v", test.Error, err)
 		}
 		if err == nil {
-			assert.NotEmpty(t, testLoadBalancerAPI.LoadBalancer.ForwardRules)
-			assert.Equal(t, rule.Name, testLoadBalancerAPI.LoadBalancer.ForwardRules[0].Name)
-			assert.Equal(t, rule.Protocol, testLoadBalancerAPI.LoadBalancer.ForwardRules[0].Protocol)
+			assert.NotNil(t, testLoadBalancerAPI.ForwardingRule)
+			assert.Equal(t, rule.SourcePort, testLoadBalancerAPI.ForwardingRule.SourcePort)
+			assert.Equal(t, rule.TargetPort, testLoadBalancerAPI.ForwardingRule.TargetPort)
+			assert.Equal(t, "TCP", testLoadBalancerAPI.ForwardingRule.Protocol)
+			assert.NotEmpty(t, testLoadBalancerAPI.ForwardingRule.UUID)
 		}
 	}
 }
@@ -358,11 +372,11 @@ func TestRemoveRule(t *testing.T) {
 	}{
 		{
 			RequestData: map[string]interface{}{
-				"uuid":    "lb-uuid-123",
-				"rule_id": 1,
+				"uuid":      "72fa225f-5cb1-45cf-83ed-b0f441b0b815",
+				"rule_uuid": "a96ee226-7204-47b4-8782-02fbbdb6d4e7",
 			},
-			Body:       `{"success":true}`,
-			StatusCode: http.StatusOK,
+			Body:       ``,
+			StatusCode: http.StatusNoContent,
 			Error:      nil,
 		},
 	}
@@ -374,8 +388,8 @@ func TestRemoveRule(t *testing.T) {
 			}, nil
 		}
 		uuid := test.RequestData["uuid"].(string)
-		ruleID := test.RequestData["rule_id"].(int)
-		err := testLoadBalancerAPI.RemoveRule(uuid, ruleID)
+		ruleUUID := test.RequestData["rule_uuid"].(string)
+		err := testLoadBalancerAPI.RemoveRule(uuid, ruleUUID)
 		if err != nil && test.Error != nil && err.Error() != test.Error.Error() {
 			t.Fatalf("want %v, got %v", test.Error, err)
 		}
@@ -394,10 +408,10 @@ func TestChangeBillingAccount(t *testing.T) {
 	}{
 		{
 			RequestData: map[string]interface{}{
-				"uuid":               "lb-uuid-123",
+				"uuid":               "72fa225f-5cb1-45cf-83ed-b0f441b0b815",
 				"billing_account_id": 5678,
 			},
-			Body:       `{"id":1,"uuid":"lb-uuid-123","name":"test-lb","billing_account_id":5678,"user_id":1,"target_ips":[],"forward_rules":[],"created_at":"2023-01-01 10:00:00","updated_at":"2023-01-01 11:00:00"}`,
+			Body:       `{"uuid":"72fa225f-5cb1-45cf-83ed-b0f441b0b815","display_name":"xyz1234","user_id":4384,"billing_account_id":5678,"created_at":"2025-12-13 11:54:16","updated_at":"2025-12-13 12:00:00","is_deleted":false,"deleted_at":null,"private_address":"10.4.207.254","network_uuid":"730bf645-9b36-44b8-8ca1-46d2480cc0d6","forwarding_rules":[],"targets":[]}`,
 			StatusCode: http.StatusOK,
 			Error:      nil,
 		},
@@ -416,7 +430,7 @@ func TestChangeBillingAccount(t *testing.T) {
 			t.Fatalf("want %v, got %v", test.Error, err)
 		}
 		if err == nil {
-			assert.Equal(t, billingAccountID, testLoadBalancerAPI.LoadBalancer.BillingAccount)
+			assert.Equal(t, billingAccountID, testLoadBalancerAPI.LoadBalancer.BillingAccountID)
 		}
 	}
 }

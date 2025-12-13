@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 )
@@ -12,42 +13,78 @@ type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
+// CreateTargetRequest represents a target in the create request
+type CreateTargetRequest struct {
+	TargetType string `json:"target_type"`
+	TargetUUID string `json:"target_uuid"`
+}
+
+// Target represents a target in the response
 type Target struct {
-	VMID   int    `json:"vm_id,omitempty"`
-	VMUUID string `json:"vm_uuid,omitempty"`
-	IPAddr string `json:"ip_addr,omitempty"`
-	Name   string `json:"name,omitempty"`
+	CreatedAt       string `json:"created_at,omitempty"`
+	TargetUUID      string `json:"target_uuid"`
+	TargetType      string `json:"target_type"`
+	TargetIPAddress string `json:"target_ip_address,omitempty"`
 }
 
+// CreateRuleRequest represents a forwarding rule in the create request
+type CreateRuleRequest struct {
+	SourcePort int `json:"source_port"`
+	TargetPort int `json:"target_port"`
+}
+
+// ForwardingRuleSettings represents the settings for a forwarding rule
+type ForwardingRuleSettings struct {
+	ConnectionLimit    int    `json:"connection_limit,omitempty"`
+	SessionPersistence string `json:"session_persistence,omitempty"`
+}
+
+// ForwardingRule represents a forwarding rule in the response
 type ForwardingRule struct {
-	ID            int    `json:"id,omitempty"`
-	Name          string `json:"name"`
-	Protocol      string `json:"protocol"`
-	FrontendPort  int    `json:"frontend_port"`
-	BackendPort   int    `json:"backend_port"`
-	HealthCheck   bool   `json:"health_check,omitempty"`
-	HealthTimeout int    `json:"health_timeout,omitempty"`
+	Protocol   string                  `json:"protocol,omitempty"`
+	UUID       string                  `json:"uuid,omitempty"`
+	CreatedAt  string                  `json:"created_at,omitempty"`
+	SourcePort int                     `json:"source_port"`
+	TargetPort int                     `json:"target_port"`
+	Settings   *ForwardingRuleSettings `json:"settings,omitempty"`
 }
 
+// CreateLoadBalancerRequest represents the request body for creating a load balancer
+type CreateLoadBalancerRequest struct {
+	ReservePublicIP  bool                  `json:"reserve_public_ip,omitempty"`
+	NetworkUUID      string                `json:"network_uuid"`
+	Targets          []CreateTargetRequest `json:"targets,omitempty"`
+	Rules            []CreateRuleRequest   `json:"rules,omitempty"`
+	DisplayName      string                `json:"display_name"`
+	BillingAccountID int                   `json:"billing_account_id"`
+}
+
+// LoadBalancer represents a load balancer resource
 type LoadBalancer struct {
-	ID             int              `json:"id,omitempty"`
-	UUID           string           `json:"uuid,omitempty"`
-	Name           string           `json:"name"`
-	BillingAccount int              `json:"billing_account_id"`
-	UserID         int              `json:"user_id,omitempty"`
-	TargetIPs      []Target         `json:"target_ips,omitempty"`
-	ForwardRules   []ForwardingRule `json:"forward_rules,omitempty"`
-	CreatedAt      string           `json:"created_at,omitempty"`
-	UpdatedAt      string           `json:"updated_at,omitempty"`
+	UUID             string           `json:"uuid,omitempty"`
+	DisplayName      string           `json:"display_name,omitempty"`
+	UserID           int              `json:"user_id,omitempty"`
+	BillingAccountID int              `json:"billing_account_id,omitempty"`
+	CreatedAt        string           `json:"created_at,omitempty"`
+	UpdatedAt        string           `json:"updated_at,omitempty"`
+	IsDeleted        bool             `json:"is_deleted,omitempty"`
+	DeletedAt        *string          `json:"deleted_at,omitempty"`
+	PrivateAddress   string           `json:"private_address,omitempty"`
+	NetworkUUID      string           `json:"network_uuid,omitempty"`
+	ForwardingRules  []ForwardingRule `json:"forwarding_rules,omitempty"`
+	Targets          []Target         `json:"targets,omitempty"`
 }
 
 type LoadBalancerAPI struct {
 	c                HTTPClient
 	AuthToken        string
 	Location         string
+	NetworkUUID      string
 	ApiEndpoint      string
 	LoadBalancer     *LoadBalancer
 	LoadBalancerList []LoadBalancer
+	Target           *Target
+	ForwardingRule   *ForwardingRule
 }
 
 func (lb *LoadBalancerAPI) Init(c HTTPClient, authToken string, location string) error {
@@ -74,7 +111,7 @@ func (lb *LoadBalancerAPI) ListLoadBalancers() error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	req.Header.Set("apiKey", lb.AuthToken)
+	req.Header.Set("apikey", lb.AuthToken)
 	r, err := lb.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
@@ -97,7 +134,7 @@ func (lb *LoadBalancerAPI) GetLoadBalancer(uuid string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	req.Header.Set("apiKey", lb.AuthToken)
+	req.Header.Set("apikey", lb.AuthToken)
 	r, err := lb.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
@@ -114,8 +151,8 @@ func (lb *LoadBalancerAPI) GetLoadBalancer(uuid string) error {
 }
 
 // CreateLoadBalancer creates a new load balancer
-func (lb *LoadBalancerAPI) CreateLoadBalancer(loadBalancer *LoadBalancer) error {
-	payloadJSON, err := json.Marshal(loadBalancer)
+func (lb *LoadBalancerAPI) CreateLoadBalancer(request *CreateLoadBalancerRequest) error {
+	payloadJSON, err := json.Marshal(request)
 	if err != nil {
 		return err
 	}
@@ -125,7 +162,7 @@ func (lb *LoadBalancerAPI) CreateLoadBalancer(loadBalancer *LoadBalancer) error 
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("apiKey", lb.AuthToken)
+	req.Header.Set("apikey", lb.AuthToken)
 
 	r, err := lb.c.Do(req)
 	if err != nil {
@@ -138,20 +175,21 @@ func (lb *LoadBalancerAPI) CreateLoadBalancer(loadBalancer *LoadBalancer) error 
 	}()
 
 	if r.StatusCode != http.StatusOK {
-		return fmt.Errorf("%v", r.StatusCode)
+		bodyBytes, _ := io.ReadAll(r.Body)
+		return fmt.Errorf("status %v: %s", r.StatusCode, string(bodyBytes))
 	}
 
 	return json.NewDecoder(r.Body).Decode(&lb.LoadBalancer)
 }
 
 // RenameLoadBalancer renames a load balancer
-func (lb *LoadBalancerAPI) RenameLoadBalancer(uuid string, name string) error {
+func (lb *LoadBalancerAPI) RenameLoadBalancer(uuid string, displayName string) error {
 	url := fmt.Sprintf("%s/%s", lb.ApiEndpoint, uuid)
 
 	payload := struct {
-		Name string `json:"name"`
+		DisplayName string `json:"display_name"`
 	}{
-		Name: name,
+		DisplayName: displayName,
 	}
 
 	payloadJSON, err := json.Marshal(payload)
@@ -164,7 +202,7 @@ func (lb *LoadBalancerAPI) RenameLoadBalancer(uuid string, name string) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("apiKey", lb.AuthToken)
+	req.Header.Set("apikey", lb.AuthToken)
 
 	r, err := lb.c.Do(req)
 	if err != nil {
@@ -190,7 +228,7 @@ func (lb *LoadBalancerAPI) DeleteLoadBalancer(uuid string) error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	req.Header.Set("apiKey", lb.AuthToken)
+	req.Header.Set("apikey", lb.AuthToken)
 	r, err := lb.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
@@ -207,7 +245,7 @@ func (lb *LoadBalancerAPI) DeleteLoadBalancer(uuid string) error {
 }
 
 // AddTarget adds a target to a load balancer
-func (lb *LoadBalancerAPI) AddTarget(uuid string, target *Target) error {
+func (lb *LoadBalancerAPI) AddTarget(uuid string, target *CreateTargetRequest) error {
 	url := fmt.Sprintf("%s/%s/targets", lb.ApiEndpoint, uuid)
 
 	payloadJSON, err := json.Marshal(target)
@@ -220,7 +258,7 @@ func (lb *LoadBalancerAPI) AddTarget(uuid string, target *Target) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("apiKey", lb.AuthToken)
+	req.Header.Set("apikey", lb.AuthToken)
 
 	r, err := lb.c.Do(req)
 	if err != nil {
@@ -236,30 +274,18 @@ func (lb *LoadBalancerAPI) AddTarget(uuid string, target *Target) error {
 		return fmt.Errorf("%v", r.StatusCode)
 	}
 
-	return json.NewDecoder(r.Body).Decode(&lb.LoadBalancer)
+	return json.NewDecoder(r.Body).Decode(&lb.Target)
 }
 
 // RemoveTarget removes a target from a load balancer
-func (lb *LoadBalancerAPI) RemoveTarget(uuid string, vmUUID string) error {
-	url := fmt.Sprintf("%s/%s/targets", lb.ApiEndpoint, uuid)
+func (lb *LoadBalancerAPI) RemoveTarget(uuid string, targetUUID string) error {
+	url := fmt.Sprintf("%s/%s/targets/%s", lb.ApiEndpoint, uuid, targetUUID)
 
-	payload := struct {
-		VMUUID string `json:"vm_uuid"`
-	}{
-		VMUUID: vmUUID,
-	}
-
-	payloadJSON, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest("DELETE", url, bytes.NewBuffer(payloadJSON))
+	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("apiKey", lb.AuthToken)
+	req.Header.Set("apikey", lb.AuthToken)
 
 	r, err := lb.c.Do(req)
 	if err != nil {
@@ -271,7 +297,7 @@ func (lb *LoadBalancerAPI) RemoveTarget(uuid string, vmUUID string) error {
 		}
 	}()
 
-	if r.StatusCode != http.StatusOK {
+	if r.StatusCode != http.StatusOK && r.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("%v", r.StatusCode)
 	}
 
@@ -279,8 +305,8 @@ func (lb *LoadBalancerAPI) RemoveTarget(uuid string, vmUUID string) error {
 }
 
 // AddRule adds a forwarding rule to a load balancer
-func (lb *LoadBalancerAPI) AddRule(uuid string, rule *ForwardingRule) error {
-	url := fmt.Sprintf("%s/%s/rules", lb.ApiEndpoint, uuid)
+func (lb *LoadBalancerAPI) AddRule(uuid string, rule *CreateRuleRequest) error {
+	url := fmt.Sprintf("%s/%s/forwarding_rules", lb.ApiEndpoint, uuid)
 
 	payloadJSON, err := json.Marshal(rule)
 	if err != nil {
@@ -292,7 +318,7 @@ func (lb *LoadBalancerAPI) AddRule(uuid string, rule *ForwardingRule) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("apiKey", lb.AuthToken)
+	req.Header.Set("apikey", lb.AuthToken)
 
 	r, err := lb.c.Do(req)
 	if err != nil {
@@ -308,18 +334,18 @@ func (lb *LoadBalancerAPI) AddRule(uuid string, rule *ForwardingRule) error {
 		return fmt.Errorf("%v", r.StatusCode)
 	}
 
-	return json.NewDecoder(r.Body).Decode(&lb.LoadBalancer)
+	return json.NewDecoder(r.Body).Decode(&lb.ForwardingRule)
 }
 
 // RemoveRule removes a forwarding rule from a load balancer
-func (lb *LoadBalancerAPI) RemoveRule(uuid string, ruleID int) error {
-	url := fmt.Sprintf("%s/%s/rules/%d", lb.ApiEndpoint, uuid, ruleID)
+func (lb *LoadBalancerAPI) RemoveRule(uuid string, ruleUUID string) error {
+	url := fmt.Sprintf("%s/%s/forwarding_rules/%s", lb.ApiEndpoint, uuid, ruleUUID)
 
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	req.Header.Set("apiKey", lb.AuthToken)
+	req.Header.Set("apikey", lb.AuthToken)
 
 	r, err := lb.c.Do(req)
 	if err != nil {
@@ -331,7 +357,7 @@ func (lb *LoadBalancerAPI) RemoveRule(uuid string, ruleID int) error {
 		}
 	}()
 
-	if r.StatusCode != http.StatusOK {
+	if r.StatusCode != http.StatusOK && r.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("%v", r.StatusCode)
 	}
 
@@ -358,7 +384,7 @@ func (lb *LoadBalancerAPI) ChangeBillingAccount(uuid string, billingAccountID in
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("apiKey", lb.AuthToken)
+	req.Header.Set("apikey", lb.AuthToken)
 
 	r, err := lb.c.Do(req)
 	if err != nil {
