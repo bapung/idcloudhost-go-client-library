@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 type HTTPClient interface {
@@ -37,7 +39,7 @@ func (n *NetworkAPI) Init(c HTTPClient, authToken string, location string) error
 	n.AuthToken = authToken
 	n.Location = location
 	n.ApiEndpoint = fmt.Sprintf(
-		"https://api.idcloudhost.com/v1/%s/network/private_networks",
+		"https://api.idcloudhost.com/v1/%s/network/networks",
 		n.Location,
 	)
 	req, err := http.NewRequest("GET", n.ApiEndpoint, nil)
@@ -61,12 +63,12 @@ func (n *NetworkAPI) Init(c HTTPClient, authToken string, location string) error
 
 // GetNetwork gets details for a specific network
 func (n *NetworkAPI) GetNetwork(uuid string) error {
-	url := fmt.Sprintf("%s/%s", n.ApiEndpoint, uuid)
+	url := fmt.Sprintf("https://api.idcloudhost.com/v1/%s/network/network/%s", n.Location, uuid)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	req.Header.Set("apiKey", n.AuthToken)
+	req.Header.Set("apikey", n.AuthToken)
 	r, err := n.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
@@ -88,7 +90,7 @@ func (n *NetworkAPI) ListNetworks() error {
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	req.Header.Set("apiKey", n.AuthToken)
+	req.Header.Set("apikey", n.AuthToken)
 	r, err := n.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
@@ -104,14 +106,19 @@ func (n *NetworkAPI) ListNetworks() error {
 	return json.NewDecoder(r.Body).Decode(&n.Networks)
 }
 
-// CreateDefaultNetwork creates or retrieves the default network
-func (n *NetworkAPI) CreateDefaultNetwork() error {
-	req, err := http.NewRequest("POST", n.ApiEndpoint, nil)
+// CreateNetwork creates a new network with a given name
+func (n *NetworkAPI) CreateNetwork(name string) error {
+	apiURL := fmt.Sprintf("https://api.idcloudhost.com/v1/%s/network/network", n.Location)
+
+	data := url.Values{}
+	data.Set("name", name)
+
+	req, err := http.NewRequest("POST", apiURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	req.Header.Set("apiKey", n.AuthToken)
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("apikey", n.AuthToken)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r, err := n.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
@@ -129,12 +136,13 @@ func (n *NetworkAPI) CreateDefaultNetwork() error {
 
 // DeleteNetwork deletes a specific network
 func (n *NetworkAPI) DeleteNetwork(uuid string) error {
-	url := fmt.Sprintf("%s/%s", n.ApiEndpoint, uuid)
+	url := fmt.Sprintf("https://api.idcloudhost.com/v1/%s/network/network/%s", n.Location, uuid)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	req.Header.Set("apiKey", n.AuthToken)
+	req.Header.Set("apikey", n.AuthToken)
+	req.Header.Set("Content-Type", "application/json")
 	r, err := n.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
@@ -152,12 +160,12 @@ func (n *NetworkAPI) DeleteNetwork(uuid string) error {
 
 // SetAsDefault sets a network as the default network
 func (n *NetworkAPI) SetAsDefault(uuid string) error {
-	url := fmt.Sprintf("%s/%s/default", n.ApiEndpoint, uuid)
+	url := fmt.Sprintf("https://api.idcloudhost.com/v1/%s/network/network/%s/default", n.Location, uuid)
 	req, err := http.NewRequest("PUT", url, nil)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	req.Header.Set("apiKey", n.AuthToken)
+	req.Header.Set("apikey", n.AuthToken)
 	r, err := n.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
@@ -175,7 +183,7 @@ func (n *NetworkAPI) SetAsDefault(uuid string) error {
 
 // UpdateNetwork updates a network's name
 func (n *NetworkAPI) UpdateNetwork(uuid string, name string) error {
-	url := fmt.Sprintf("%s/%s", n.ApiEndpoint, uuid)
+	url := fmt.Sprintf("https://api.idcloudhost.com/v1/%s/network/network/%s", n.Location, uuid)
 
 	payload := struct {
 		Name string `json:"name"`
@@ -193,7 +201,7 @@ func (n *NetworkAPI) UpdateNetwork(uuid string, name string) error {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("apiKey", n.AuthToken)
+	req.Header.Set("apikey", n.AuthToken)
 
 	r, err := n.c.Do(req)
 	if err != nil {

@@ -15,11 +15,9 @@ type HTTPClient interface {
 }
 
 type S3Key struct {
-	AccessKey string `json:"access_key"`
-	SecretKey string `json:"secret_key"`
-	UserID    int    `json:"user_id,omitempty"`
-	CreatedAt string `json:"created_at,omitempty"`
-	UpdatedAt string `json:"updated_at,omitempty"`
+	AccessKey string `json:"accessKey"`
+	SecretKey string `json:"secretKey"`
+	UserID    string `json:"userId,omitempty"`
 }
 
 type S3User struct {
@@ -35,15 +33,16 @@ type S3User struct {
 }
 
 type Bucket struct {
-	ID             int    `json:"id,omitempty"`
 	Name           string `json:"name"`
 	BillingAccount int    `json:"billing_account_id,omitempty"`
 	UserID         int    `json:"user_id,omitempty"`
 	SizeBytes      int64  `json:"size_bytes,omitempty"`
-	Region         string `json:"region,omitempty"`
-	ACL            string `json:"acl"`
+	NumObjects     int    `json:"num_objects,omitempty"`
+	Owner          string `json:"owner,omitempty"`
+	IsSuspended    bool   `json:"is_suspended,omitempty"`
 	CreatedAt      string `json:"created_at,omitempty"`
-	UpdatedAt      string `json:"updated_at,omitempty"`
+	ModifiedAt     string `json:"modified_at,omitempty"`
+	ACL            string `json:"acl,omitempty"`
 }
 
 type ObjectStorageAPI struct {
@@ -60,7 +59,7 @@ type ObjectStorageAPI struct {
 func (s *ObjectStorageAPI) Init(c HTTPClient, authToken string, location string) error {
 	s.c = c
 	s.AuthToken = authToken
-	s.ApiEndpoint = "https://api.idcloudhost.com/v1/object-storage"
+	s.ApiEndpoint = "https://api.idcloudhost.com/v1/storage/api/s3"
 
 	req, err := http.NewRequest("GET", s.ApiEndpoint, nil)
 	if err != nil {
@@ -81,42 +80,19 @@ func (s *ObjectStorageAPI) Init(c HTTPClient, authToken string, location string)
 	return nil
 }
 
-// GetS3Info returns S3 API information for the user
-func (s *ObjectStorageAPI) GetS3Info() error {
-	req, err := http.NewRequest("GET", s.ApiEndpoint, nil)
-	if err != nil {
-		return fmt.Errorf("got error %s", err.Error())
-	}
-	req.Header.Set("apiKey", s.AuthToken)
-	r, err := s.c.Do(req)
-	if err != nil {
-		return fmt.Errorf("got error %s", err.Error())
-	}
-	defer func() {
-		if err := r.Body.Close(); err != nil {
-			log.Printf("error closing response body: %v", err)
-		}
-	}()
-	if r.StatusCode != http.StatusOK {
-		return fmt.Errorf("%v", r.StatusCode)
-	}
-	return json.NewDecoder(r.Body).Decode(&s.S3User)
-}
-
 // CreateBucket creates a new S3 bucket
-func (s *ObjectStorageAPI) CreateBucket(name string, acl string, billingAccountID int) error {
+func (s *ObjectStorageAPI) CreateBucket(name string, billingAccountID int) error {
 	data := url.Values{}
 	data.Set("name", name)
-	data.Set("acl", acl)
 	data.Set("billing_account_id", strconv.Itoa(billingAccountID))
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/buckets", s.ApiEndpoint),
+	req, err := http.NewRequest("PUT", "https://api.idcloudhost.com/v1/storage/bucket",
 		strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("apiKey", s.AuthToken)
+	req.Header.Set("apikey", s.AuthToken)
 
 	r, err := s.c.Do(req)
 	if err != nil {
@@ -128,38 +104,11 @@ func (s *ObjectStorageAPI) CreateBucket(name string, acl string, billingAccountI
 		}
 	}()
 
+	if r.StatusCode == http.StatusConflict {
+		return fmt.Errorf("bucket name '%s' already exists (bucket names are globally unique)", name)
+	}
 	if r.StatusCode != http.StatusOK {
-		return fmt.Errorf("%v", r.StatusCode)
-	}
-
-	return json.NewDecoder(r.Body).Decode(&s.Bucket)
-}
-
-// ModifyBucket updates a bucket's ACL
-func (s *ObjectStorageAPI) ModifyBucket(name string, acl string) error {
-	data := url.Values{}
-	data.Set("acl", acl)
-
-	req, err := http.NewRequest("PATCH", fmt.Sprintf("%s/buckets/%s", s.ApiEndpoint, name),
-		strings.NewReader(data.Encode()))
-	if err != nil {
-		return fmt.Errorf("got error %s", err.Error())
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("apiKey", s.AuthToken)
-
-	r, err := s.c.Do(req)
-	if err != nil {
-		return fmt.Errorf("got error %s", err.Error())
-	}
-	defer func() {
-		if err := r.Body.Close(); err != nil {
-			log.Printf("error closing response body: %v", err)
-		}
-	}()
-
-	if r.StatusCode != http.StatusOK {
-		return fmt.Errorf("%v", r.StatusCode)
+		return fmt.Errorf("status code %v", r.StatusCode)
 	}
 
 	return json.NewDecoder(r.Body).Decode(&s.Bucket)
@@ -167,11 +116,16 @@ func (s *ObjectStorageAPI) ModifyBucket(name string, acl string) error {
 
 // DeleteBucket deletes a bucket
 func (s *ObjectStorageAPI) DeleteBucket(name string) error {
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/buckets/%s", s.ApiEndpoint, name), nil)
+	data := url.Values{}
+	data.Set("name", name)
+
+	req, err := http.NewRequest("DELETE", "https://api.idcloudhost.com/v1/storage/bucket",
+		strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	req.Header.Set("apiKey", s.AuthToken)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("apikey", s.AuthToken)
 
 	r, err := s.c.Do(req)
 	if err != nil {
@@ -183,45 +137,20 @@ func (s *ObjectStorageAPI) DeleteBucket(name string) error {
 		}
 	}()
 
-	if r.StatusCode != http.StatusOK {
+	if r.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("%v", r.StatusCode)
 	}
 
 	return nil
 }
 
-// GetBucket gets information about a specific bucket
-func (s *ObjectStorageAPI) GetBucket(name string) error {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/buckets/%s", s.ApiEndpoint, name), nil)
-	if err != nil {
-		return fmt.Errorf("got error %s", err.Error())
-	}
-	req.Header.Set("apiKey", s.AuthToken)
-
-	r, err := s.c.Do(req)
-	if err != nil {
-		return fmt.Errorf("got error %s", err.Error())
-	}
-	defer func() {
-		if err := r.Body.Close(); err != nil {
-			log.Printf("error closing response body: %v", err)
-		}
-	}()
-
-	if r.StatusCode != http.StatusOK {
-		return fmt.Errorf("%v", r.StatusCode)
-	}
-
-	return json.NewDecoder(r.Body).Decode(&s.Bucket)
-}
-
 // ListBuckets lists all buckets owned by the user
 func (s *ObjectStorageAPI) ListBuckets() error {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/buckets", s.ApiEndpoint), nil)
+	req, err := http.NewRequest("GET", "https://api.idcloudhost.com/v1/storage/bucket/list", nil)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	req.Header.Set("apiKey", s.AuthToken)
+	req.Header.Set("apikey", s.AuthToken)
 
 	r, err := s.c.Do(req)
 	if err != nil {
@@ -242,11 +171,11 @@ func (s *ObjectStorageAPI) ListBuckets() error {
 
 // GetKeys retrieves the user's S3 access keys
 func (s *ObjectStorageAPI) GetKeys() error {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/keys", s.ApiEndpoint), nil)
+	req, err := http.NewRequest("GET", "https://api.idcloudhost.com/v1/storage/user/keys", nil)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	req.Header.Set("apiKey", s.AuthToken)
+	req.Header.Set("apikey", s.AuthToken)
 
 	r, err := s.c.Do(req)
 	if err != nil {
@@ -267,11 +196,11 @@ func (s *ObjectStorageAPI) GetKeys() error {
 
 // GenerateKey generates a new S3 access key
 func (s *ObjectStorageAPI) GenerateKey() error {
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/keys", s.ApiEndpoint), nil)
+	req, err := http.NewRequest("POST", "https://api.idcloudhost.com/v1/storage/user/keys", nil)
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
-	req.Header.Set("apiKey", s.AuthToken)
+	req.Header.Set("apikey", s.AuthToken)
 
 	r, err := s.c.Do(req)
 	if err != nil {
@@ -287,7 +216,16 @@ func (s *ObjectStorageAPI) GenerateKey() error {
 		return fmt.Errorf("%v", r.StatusCode)
 	}
 
-	return json.NewDecoder(r.Body).Decode(&s.S3Key)
+	var keys []S3Key
+	if err := json.NewDecoder(r.Body).Decode(&keys); err != nil {
+		return err
+	}
+
+	if len(keys) > 0 {
+		s.S3Key = &keys[len(keys)-1] // Get the last (newest) key
+	}
+
+	return nil
 }
 
 // DeleteKey deletes an S3 access key
@@ -295,13 +233,13 @@ func (s *ObjectStorageAPI) DeleteKey(accessKey string) error {
 	data := url.Values{}
 	data.Set("access_key", accessKey)
 
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/keys", s.ApiEndpoint),
+	req, err := http.NewRequest("DELETE", "https://api.idcloudhost.com/v1/storage/user/keys",
 		strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("got error %s", err.Error())
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("apiKey", s.AuthToken)
+	req.Header.Set("apikey", s.AuthToken)
 
 	r, err := s.c.Do(req)
 	if err != nil {
