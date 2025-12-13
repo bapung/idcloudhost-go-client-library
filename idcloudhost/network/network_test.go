@@ -116,15 +116,15 @@ func TestNetworkAPI_ListNetworks(t *testing.T) {
 	}
 }
 
-func TestNetworkAPI_CreateDefaultNetwork(t *testing.T) {
+func TestNetworkAPI_CreateNetwork(t *testing.T) {
 	// Create a sample network response
 	networkResponse := `{
 		"id": 1,
-		"name": "default-network",
-		"uuid": "default-uuid",
+		"name": "testvpc-000",
+		"uuid": "new-vpc-uuid",
 		"user_id": 123,
-		"default": true,
-		"description": "Default network",
+		"default": false,
+		"description": "Test VPC",
 		"created_at": "2022-01-01T00:00:00Z",
 		"updated_at": "2022-01-01T00:00:00Z"
 	}`
@@ -135,7 +135,7 @@ func TestNetworkAPI_CreateDefaultNetwork(t *testing.T) {
 		t.Fatalf("failed to initialize network api: %v", err)
 	}
 
-	err := networkAPI.CreateDefaultNetwork()
+	err := networkAPI.CreateNetwork("testvpc-000")
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
@@ -144,12 +144,12 @@ func TestNetworkAPI_CreateDefaultNetwork(t *testing.T) {
 		t.Fatal("Expected Network to be populated")
 	}
 
-	if networkAPI.Network.UUID != "default-uuid" {
-		t.Errorf("Expected UUID 'default-uuid', got %s", networkAPI.Network.UUID)
+	if networkAPI.Network.UUID != "new-vpc-uuid" {
+		t.Errorf("Expected UUID 'new-vpc-uuid', got %s", networkAPI.Network.UUID)
 	}
 
-	if !networkAPI.Network.Default {
-		t.Errorf("Expected Default to be true")
+	if networkAPI.Network.Name != "testvpc-000" {
+		t.Errorf("Expected Name 'testvpc-000', got %s", networkAPI.Network.Name)
 	}
 }
 

@@ -26,9 +26,9 @@ func TestNetworkIntegration(t *testing.T) {
 		t.Fatalf("Init failed: %v", err)
 	}
 
-	// 1. Create default network
-	if err := api.CreateDefaultNetwork(); err != nil {
-		t.Fatalf("CreateDefaultNetwork failed: %v", err)
+	// 1. Create network
+	if err := api.CreateNetwork("integration-test-network"); err != nil {
+		t.Fatalf("CreateNetwork failed: %v", err)
 	}
 	networkUUID := api.Network.UUID
 	t.Logf("Created network UUID: %s", networkUUID)
@@ -69,11 +69,11 @@ func TestNetworkIntegration(t *testing.T) {
 	if api.Network.Name != updatedName {
 		t.Errorf("Expected name %s, got %s", updatedName, api.Network.Name)
 	}
-
+	// default cannot be deleted
 	// 5. Set as default (if not already)
-	if err := api.SetAsDefault(networkUUID); err != nil {
-		t.Fatalf("SetAsDefault failed: %v", err)
-	}
+	//if err := api.SetAsDefault(networkUUID); err != nil {
+	//	t.Fatalf("SetAsDefault failed: %v", err)
+	//}
 
 	// 6. Delete network (cleanup)
 	if err := api.DeleteNetwork(networkUUID); err != nil {
